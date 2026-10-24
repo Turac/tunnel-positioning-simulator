@@ -31,13 +31,13 @@ Changing a value requires updating this file in the same commit.
 
 | ID | Assumption | Value | Rationale | Status |
 |---|---|---|---|---|
-| A-20 | The phone is rigidly mounted in the car for the whole drive. | — | Typical navigation usage. Violated deliberately in a failure scenario. | chosen |
+| A-20 | The phone is rigidly mounted in the car for the whole drive. | — | Typical navigation usage. Violated deliberately in extension E6. | chosen |
 | A-21 | The phone's orientation relative to the car is calibrated before the tunnel; the simulator provides longitudinal (forward) acceleration with a configurable residual mount misalignment. | default 0°, scenario up to ~5° | Keeps the first version simple; misalignment is then varied to show its effect. | chosen |
-| A-22 | IMU sample rate. | 100 Hz | Within the range phones commonly deliver; exact rate varies per device and OS. | draft (Phase 2) |
-| A-23 | Accelerometer errors: white noise (incl. vehicle vibration), constant bias, slow bias drift. | values TBD | Consumer MEMS sensors are not navigation-grade. | draft (Phase 2) |
-| A-24 | GNSS fix rate. | 1 Hz | Typical location update rate for navigation. | draft (Phase 2) |
-| A-25 | GNSS error in open sky (position and speed). | values TBD | Will be set from published smartphone figures. | draft (Phase 2) |
-| A-26 | GNSS degrades near the portal, may report stale fixes after entry, and returns after the exit with a reacquisition delay and inflated initial error. | values TBD | Real receivers do not switch off cleanly. | draft (Phase 2) |
+| A-22 | IMU sample rate. | 100 Hz | Within the range phones commonly deliver; exact rate varies per device and OS. | draft (Phase 1) |
+| A-23 | Accelerometer errors: white noise (incl. vehicle vibration), constant bias, slow bias drift. | values TBD | Consumer MEMS sensors are not navigation-grade. | draft (Phase 1) |
+| A-24 | GNSS fix rate. | 1 Hz | Typical location update rate for navigation. | draft (Phase 1) |
+| A-25 | GNSS error in open sky (position and speed). | values TBD | Will be set from published smartphone figures. | draft (Phase 1) |
+| A-26 | GNSS is lost inside the tunnel and returns after the exit with a reacquisition delay and inflated error on the first fixes. Gradual degradation at the portal and stale fixes are extension E3. | values TBD | Real receivers do not switch off cleanly. | draft (Phase 1) |
 | A-27 | Magnetometer is not used. | — | Tunnel reinforcement and vehicle electronics distort magnetic readings. | chosen |
 | A-28 | Cellular / Wi-Fi positioning is not used. | — | Too coarse for along-tunnel position; tunnels often use repeaters. | chosen |
 | A-29 | Vehicle speed from OBD or the car is not assumed. | — | Not available to every user; may be discussed as future work. | chosen |
@@ -46,6 +46,6 @@ Changing a value requires updating this file in the same commit.
 
 | ID | Assumption | Value | Rationale | Status |
 |---|---|---|---|---|
-| A-40 | Exit announcements are made at fixed lead distances before the exit. | TBD (e.g. 400 m and 100 m) | Demo threshold chosen by us, not a product requirement. | draft (Phase 3) |
-| A-41 | Acceptance thresholds for errors are demo thresholds, labelled as our choice. | TBD | No product threshold is given in the task. | draft (Phase 3) |
+| A-40 | Exit announcements are made at fixed lead distances before the exit. | TBD (e.g. 400 m and 100 m) | Demo threshold chosen by us, not a product requirement. | draft (Phase 2) |
+| A-41 | Acceptance thresholds for errors are demo thresholds, labelled as our choice. | TBD | No product threshold is given in the task. | draft (Phase 2) |
 | A-42 | Results are reported over multiple seeds as median / P95 / max. | ≥ 50 seeds | Single runs hide variance. | chosen |

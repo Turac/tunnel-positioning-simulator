@@ -52,6 +52,8 @@ docs/                Assumptions, decisions (ADRs), AI log, report.
 - Time: seconds since scenario start, as `number`. Each sensor has its own sample times.
 - TypeScript `strict` mode. No `any` in `src/core/`.
 - Prefer small pure functions. Estimators expose `step(measurement) -> Estimate`.
+- No schedule language in the repository ("today", "tomorrow", day numbers, "three-day
+  plan"). Dates as metadata on ADRs and AI log entries are kept.
 
 ## Decision protocol
 
@@ -101,18 +103,75 @@ new dependency, data format, architecture change):
 
 ## Phases
 
+The plan is a **core** that is complete and deliverable on its own, plus optional
+**extensions** added afterwards. Extensions start only once the core is complete.
+
+### Core
+
 | Phase | Branch | Goal |
 |---|---|---|
-| 0 | `main` | Scaffolding, conventions, assumptions, PRNG |
-| 1 | `phase-1-world` | Tunnel geometry, speed and grade profiles, true trajectory |
-| 2 | `phase-2-sensors` | IMU and GNSS measurement models |
-| 3 | `phase-3-eval` | Metrics, Monte Carlo runner, baseline estimators |
-| 4 | `phase-4-kalman` | IMU dead reckoning, Kalman filter, stop detection, GNSS gating |
-| 5 | `phase-5-ui` | Visual simulator and live parameter controls |
-| 6 | `phase-6-results` | Evaluation runs, report, README, AI usage notes |
+| 0 | `main` | Scaffolding, conventions, assumptions, Vitest, ESLint boundaries, seeded PRNG |
+| 1 | `phase-1-simulation` | World and sensors (see below) |
+| 2 | `phase-2-estimation` | Metrics, Monte Carlo runner, scenarios, estimators (see below) |
+| 3 | `phase-3-ui-report` | Visual simulator, evaluation runs, report, README, AI usage note |
 
-Stretch (only after Phase 6 core is complete): sparse BLE beacons, exit-branch hypotheses,
-multiple cars.
+**Phase 1 — simulation.**
+- World: tunnel geometry, speed and grade profiles, true trajectory.
+- Accelerometer: white noise, constant bias, slow bias drift, mount misalignment,
+  grade (gravity) leakage.
+- GNSS: lost inside the tunnel, delayed return after the exit, inflated error on the
+  first fixes after reacquisition.
+
+**Phase 2 — estimation.**
+- Metrics and Monte Carlo runner.
+- Five scenarios: basic (1 km), long (5 km), stop-and-go, graded tunnel,
+  bad sensor + GNSS jump on exit.
+- Estimators: B0 constant velocity; A1 pure IMU integration; A2 Kalman filter with stop
+  detection, grade compensation and GNSS gating.
+- Consistency metric: fraction of time the true position lies within the filter's
+  ±2σ band.
+
+**Phase 3 — UI and report.**
+- Single-page visual simulator: straight road strip with the tunnel, true vs estimated
+  car with uncertainty band, 2–3 charts, scenario selector, parameter sliders.
+- Evaluation runs, report, README, AI usage note.
+
+### Extensions
+
+Ordered by value. Each extension is developed on its own branch `ext-eN-short-name`
+(e.g. `ext-e1-free-flow-baseline`), has its own ADR, and its PR includes a before/after
+results comparison.
+
+| ID | Extension |
+|---|---|
+| E1 | Free-flow speed baseline (B1) |
+| E2 | Sensor timestamp latency and sampling jitter |
+| E3 | Gradual GNSS degradation at the portal and stale fixes |
+| E4 | Full NEES consistency analysis |
+| E5 | Sensitivity analysis of error sources |
+| E6 | Phone picked up by the driver scenario |
+| E7 | Sparse BLE beacons |
+| E8 | Multi-hypothesis tracking for the exit branch |
+| E9 | Barometer and map grade-profile matching |
+| E10 | Multiple cars with a crowdsourced speed prior |
+| E11 | Screen recording |
+
+## Extension points
+
+The core is designed so that extensions plug in without changing it. Each extension point
+is an interface and a list, not a framework. Do not write abstractions that the core does
+not use.
+
+| To add | Do this |
+|---|---|
+| A sensor | Add a new `Measurement` variant; the sensor draws from its own named PRNG stream. |
+| An estimator | Implement the common estimator interface and add it to the estimator list used by the evaluator. |
+| A sensor error term | Add it as a separate component, off by default, so existing scenarios are unchanged. |
+| A scenario | Add a new JSON file under `scenarios/`. |
+| A metric | Add a new function and a new column in the results table. |
+
+**Invariant:** adding an extension must not change the results of existing scenarios and
+seeds. Scenario regression tests on fixed seeds enforce this.
 
 ## Commands
 
@@ -120,4 +179,4 @@ multiple cars.
 - `npm test` run unit and scenario tests
 - `npm run typecheck` type-check without emitting
 - `npm run lint` lint, including module boundaries
-- `npm run eval` batch Monte Carlo evaluation (from Phase 3)
+- `npm run eval` batch Monte Carlo evaluation (from Phase 2)

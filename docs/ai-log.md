@@ -57,3 +57,16 @@ Format: date · tool · topic · AI proposal · decision · reason.
 - **Reason:** Boundary enforcement relies on ESLint's built-in `no-restricted-imports` with
   per-directory overrides, and on ESLint's Node API to prove the rules fire in a test.
   Lint speed is not a concern at this project size.
+
+### 2026-10-24 · Claude Code · Plan restructure: core and extensions
+
+- **AI proposal:** Seven sequential phases (0–6) with an unordered "stretch" list
+  (BLE beacons, exit-branch hypotheses, multiple cars) to attempt after Phase 6.
+- **Decision:** Four core phases (0–3) that are complete and deliverable on their own,
+  plus eleven extensions (E1–E11) ordered by value. Each extension gets its own branch,
+  ADR and before/after results comparison. Five simple extension points (new sensor,
+  estimator, error term, scenario, metric) are defined, and adding an extension must not
+  change the results of existing scenarios and seeds.
+- **Reason:** A self-contained core guarantees a complete deliverable regardless of how
+  many extensions are added. Ordering extensions by value and requiring a measured
+  before/after comparison keeps every addition justified and explainable.

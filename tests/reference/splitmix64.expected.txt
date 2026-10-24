@@ -22,3 +22,31 @@ seed 4294967295:
   #3    0xee4ac9ff47275e73
   #4    0x12f4eeb73ced4b8e
   #1000 0x511c6d42db6b0ef4
+stream 1 seed 42 (input 4294967338 = 0x000000010000002a):
+  state = { 0xb0507523, 0x4e08d6bd, 0x7ff613d5, 0xb77ad2f1 }
+  #1    0x4e08d6bdb0507523
+  #2    0xb77ad2f17ff613d5
+  #3    0xfe0db8e6968a7fb8
+  #4    0x65a53b728b307ea0
+  #1000 0x31603991a1071cf1
+stream 2 seed 42 (input 8589934634 = 0x000000020000002a):
+  state = { 0x64eb6168, 0x2381093e, 0xaff51209, 0x5ecd9410 }
+  #1    0x2381093e64eb6168
+  #2    0x5ecd9410aff51209
+  #3    0xb0ba073df00761af
+  #4    0x5cf7230a3217ba4b
+  #1000 0x08bf420ccc08c675
+stream 1 seed 0 (input 4294967296 = 0x0000000100000000):
+  state = { 0xa3820138, 0xc42c5a1a, 0x5756bd3d, 0x37ad5fdd }
+  #1    0xc42c5a1aa3820138
+  #2    0x37ad5fdd5756bd3d
+  #3    0xaf57978921422ad5
+  #4    0x7297d929b3ebaef5
+  #1000 0x77bcf7b41dbcc412
+stream 1 seed 4294967295 (input 8589934591 = 0x00000001ffffffff):
+  state = { 0x7bf9c2c8, 0xb0caed0a, 0x779b52ea, 0x47c937cc }
+  #1    0xb0caed0a7bf9c2c8
+  #2    0x47c937cc779b52ea
+  #3    0x2d1b386fbad353d3
+  #4    0x5710cfc61b1022e4
+  #1000 0xff9f13db4122c7bb

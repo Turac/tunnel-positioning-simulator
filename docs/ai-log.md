@@ -104,3 +104,28 @@ Format: date · tool · topic · AI proposal · decision · reason.
   `tests/reference/`. The project author recomputed all values independently.
 - **Reason:** A known-answer test only proves correctness if its answers come from an
   independent, verifiable source.
+
+### 2026-10-24 · Claude Code · Named stream derivation
+
+- **AI proposal:** Derive stream seeds by hashing stream names with FNV-1a, mixing with
+  the seed, and reducing to a 32-bit seed.
+- **Decision:** No hash. A permanent, append-only table maps each independent random
+  source to an integer ID. Each stream's xoshiro128** state is filled directly by
+  SplitMix64 initialised with `(streamId << 32) | seed`, split low-then-high like
+  `createRng`, with no reduction to 32 bits. Verified with the existing official
+  SplitMix64 harness.
+- **Human proposal corrected by AI:** The project author first proposed
+  `(seed << 32) | streamId`, based on their own research and a separate chat discussion
+  with Claude, claiming every stream input would be ≥ 2^32. Before implementing, Claude
+  Code found that this fails for seed 0: `(0 << 32) | 1 = 1`, so stream 1 with seed 0
+  would reproduce `createRng(1)`. The fields were swapped: with IDs starting at 1, every
+  stream input is ≥ 2^32 and every plain seed is < 2^32, for all seeds including 0.
+- **Reason:** Reusing the already verified SplitMix64 avoids a second reference source.
+- **Lesson:** Check boundary values (0 and the maximum), and review AI suggestions and
+  your own proposals with the same care.
+- **Mutation check:** Seven deliberate breakages were tried. Six failed at least one test.
+  The seventh, removing the unknown-stream-name guard, survived: an unknown name maps to
+  an `undefined` ID, which the ID validation already rejects with a `RangeError`, so the
+  guard only improves the error message. The guard was kept, because a clear
+  "Unknown stream" message helps when a stream name is mistyped, and the test now checks
+  the message, so the mutant is killed.

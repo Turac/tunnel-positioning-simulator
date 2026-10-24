@@ -22,5 +22,7 @@ int main(void) {
 	print_vector("B", 0x9e3779b9, 0x243f6a88, 0xb7e15162, 0x6a09e667);
 	/* State produced by seeding with 42 (splitmix64, low-then-high words; see ADR-0004). */
 	print_vector("SEED42", 0x2feb6e95, 0xbdd73226, 0xb266f103, 0x28efe333);
+	/* State of named stream 1 with seed 42: SplitMix64 input (1 << 32) | 42 (ADR-0006). */
+	print_vector("STREAM1_SEED42", 0xb0507523, 0x4e08d6bd, 0x7ff613d5, 0xb77ad2f1);
 	return 0;
 }

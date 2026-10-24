@@ -27,10 +27,14 @@ shasum -a 256 tests/reference/*.c
 `*-harness.c` files `#include` the official file and only add a `main()` that sets fixed
 inputs and prints outputs. The printed output is stored in `*.expected.txt`.
 
-- `xoshiro128starstar-harness.c`: outputs 1–10 and 1000 for three fixed states: `A`
-  (`{1, 2, 3, 4}`), `B` (words with high bits set, to exercise unsigned 32-bit arithmetic)
-  and `SEED42` (the state that seed 42 expands to; see ADR-0004).
-- `splitmix64-harness.c`: outputs 1–4 and 1000 for seeds 0, 1, 42 and 4294967295.
+- `xoshiro128starstar-harness.c`: outputs 1–10 and 1000 for four fixed states: `A`
+  (`{1, 2, 3, 4}`), `B` (words with high bits set, to exercise unsigned 32-bit arithmetic),
+  `SEED42` (the state that seed 42 expands to; see ADR-0004) and `STREAM1_SEED42` (the state
+  of named stream 1 with seed 42; see ADR-0006).
+- `splitmix64-harness.c`: outputs 1–4 and 1000 for seeds 0, 1, 42 and 4294967295, and for
+  the named-stream inputs `(streamId << 32) | seed` with stream 1 / seed 42, stream 2 /
+  seed 42, stream 1 / seed 0 and stream 1 / seed 4294967295. For those it also prints the
+  xoshiro128\*\* state (low-then-high word split), computed in C.
 
 ## Rebuild and compare
 

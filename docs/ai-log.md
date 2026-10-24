@@ -85,3 +85,22 @@ Format: date · tool · topic · AI proposal · decision · reason.
   restored and checked byte-for-byte against a backup.
 - **Reason:** A test that has never been seen failing may be always-green. The mutation
   check shows the boundary test actually detects a weakened rule.
+
+### 2026-10-24 · Claude Code · PRNG reference test vectors
+
+- **AI proposal:** Verify the xoshiro128** port against "the reference C implementation's"
+  first outputs, without saying where those expected values would come from; then, after a
+  first correction, write the reference C code and compile it. Seed the generator with
+  splitmix32.
+- **Decision:** (1) Expected values must not be written from memory. (2) The C reference
+  must not be written from memory either: if both the C and the TypeScript came from the
+  AI's recollection, a shared mistake would make the test pass. Download the official files
+  from the authors' site (prng.di.unimi.it: `xoshiro128starstar.c` version 1.1, the `f2x.c`
+  it includes, and `splitmix64.c`, which redirects to `splitmix.c`), record URLs and
+  SHA-256 hashes, compile them unmodified with a separate harness that only adds `main()`,
+  and use that output as the expected values; stop if the download fails. (3) Use
+  SplitMix64 instead of splitmix32 for seeding, because splitmix32 has no official reference
+  from the authors. The sources, harnesses and expected output are kept in
+  `tests/reference/`. The project author recomputed all values independently.
+- **Reason:** A known-answer test only proves correctness if its answers come from an
+  independent, verifiable source.

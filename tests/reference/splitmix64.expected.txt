@@ -1,0 +1,24 @@
+seed 0:
+  #1    0xe220a8397b1dcdaf
+  #2    0x6e789e6aa1b965f4
+  #3    0x06c45d188009454f
+  #4    0xf88bb8a8724c81ec
+  #1000 0x14e0abb2bfcf7c3e
+seed 1:
+  #1    0x910a2dec89025cc1
+  #2    0xbeeb8da1658eec67
+  #3    0xf893a2eefb32555e
+  #4    0x71c18690ee42c90b
+  #1000 0xe71894b1b5034fb7
+seed 42:
+  #1    0xbdd732262feb6e95
+  #2    0x28efe333b266f103
+  #3    0x47526757130f9f52
+  #4    0x581ce1ff0e4ae394
+  #1000 0x66091ca85313fa68
+seed 4294967295:
+  #1    0x73b13ba2aff181c0
+  #2    0x612043051340d3b4
+  #3    0xee4ac9ff47275e73
+  #4    0x12f4eeb73ced4b8e
+  #1000 0x511c6d42db6b0ef4

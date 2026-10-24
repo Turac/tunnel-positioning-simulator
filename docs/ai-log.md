@@ -1,0 +1,43 @@
+# AI usage log
+
+Running record of how AI tools were used, and where their output was corrected, rejected or
+changed. Source material for the final AI usage note.
+
+Format: date · tool · topic · AI proposal · decision · reason.
+
+---
+
+### 2026-10-24 · Claude (chat) and ChatGPT · Problem framing and scope
+
+- **AI proposal:** Claude's first plan included a particle filter on the road graph, BLE beacon
+  aiding and map-feature matching in the core scope.
+- **Decision:** Moved these to stretch goals / future work. Core scope is baselines plus a
+  small Kalman filter with stop detection and grade compensation.
+- **Reason:** Every component in the core must be explainable in depth during the interview;
+  a smaller, well-measured core is stronger than a broad, shallow one.
+
+### 2026-10-24 · ChatGPT, reviewed with Claude · Role of the Kalman filter
+
+- **AI proposal:** ChatGPT suggested pure IMU dead reckoning with a bias term as the main
+  method and a Kalman filter as an optional middle ground.
+- **Decision:** The Kalman filter is the main method; pure integration stays as an
+  intermediate step for comparison.
+- **Reason:** The bias term must be estimated before the tunnel while GNSS is available;
+  estimating it is the filter's main job. Without that, the bias is unknown and the method
+  is a strawman.
+
+### 2026-10-24 · ChatGPT, reviewed with Claude · Missing physical effects
+
+- **AI proposal:** Four scenarios (basic, long, speed change, bad sensor) with no road grade
+  and no explicit stop handling.
+- **Decision:** Added a graded tunnel scenario, grade compensation and stop detection (ZUPT)
+  to the core.
+- **Reason:** On a 4 % slope gravity leaks about 0.39 m/s² into the longitudinal axis, which
+  dominates sensor bias. Stop-and-go traffic cannot be handled by integration alone.
+
+### 2026-10-24 · ChatGPT, reviewed with Claude · Exit announcement metric
+
+- **AI proposal:** Test that the announcement fires when the exit point is passed.
+- **Decision:** Announcements fire at lead distances before the exit (A-40); the metric is
+  the true remaining distance and time when the estimate says the lead distance is reached.
+- **Reason:** Navigation apps announce exits ahead of time; firing at the exit is too late.

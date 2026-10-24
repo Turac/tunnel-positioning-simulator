@@ -70,3 +70,18 @@ Format: date · tool · topic · AI proposal · decision · reason.
 - **Reason:** A self-contained core guarantees a complete deliverable regardless of how
   many extensions are added. Ordering extensions by value and requiring a measured
   before/after comparison keeps every addition justified and explainable.
+
+### 2026-10-24 · Claude Code · Module-boundary lint rules and their proof test
+
+- **AI proposal:** Beyond the approved plan, also ban the `Date` and `performance` globals
+  (not only `Date.now` / `performance.now`), `globalThis` (closes the
+  `globalThis.Math.random` bypass) and dynamic `import()` (invisible to
+  `no-restricted-imports`) in `src/core`, and use ESLint's `defineConfig()` instead of the
+  deprecated `tseslint.config()`.
+- **Decision:** All four approved.
+- **Verification (mutation check):** Each rule was deliberately broken in turn (truth
+  isolation patterns removed, `Math.random` rule weakened, estimators file glob broken) and
+  the boundary test was run: 4, 2 and 4 tests failed respectively. The config was then
+  restored and checked byte-for-byte against a backup.
+- **Reason:** A test that has never been seen failing may be always-green. The mutation
+  check shows the boundary test actually detects a weakened rule.

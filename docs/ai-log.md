@@ -41,3 +41,19 @@ Format: date · tool · topic · AI proposal · decision · reason.
 - **Decision:** Announcements fire at lead distances before the exit (A-40); the metric is
   the true remaining distance and time when the estimate says the lead distance is reached.
 - **Reason:** Navigation apps announce exits ahead of time; firing at the exit is too late.
+
+### 2026-10-24 · Claude Code · TypeScript version pin
+
+- **AI proposal:** Install the latest stable version of all tooling.
+- **Decision:** Pin TypeScript to `~6.0.3` instead of the latest 7.0.2.
+- **Reason:** typescript-eslint 8.72 supports TypeScript `<6.1.0` only, and the
+  module-boundary lint rules (CLAUDE.md rule 1) depend on it. Upgrade when support lands.
+
+### 2026-10-24 · Claude Code · Linter: ESLint instead of the template's oxlint
+
+- **AI proposal:** The current `create-vite` React + TypeScript template ships oxlint
+  instead of ESLint; Claude flagged this and recommended keeping ESLint.
+- **Decision:** Keep ESLint; do not adopt oxlint or `.oxlintrc.json`.
+- **Reason:** Boundary enforcement relies on ESLint's built-in `no-restricted-imports` with
+  per-directory overrides, and on ESLint's Node API to prove the rules fire in a test.
+  Lint speed is not a concern at this project size.

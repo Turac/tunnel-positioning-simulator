@@ -11,6 +11,9 @@ export const STREAM_IDS = {
   accelBiasInitial: 3, // accelerometer turn-on bias, one draw per run
   accelBiasDrift: 4, // accelerometer bias random-walk increments
   accelVibration: 5, // vibration phase, one draw per run
+  gnssSpeed: 6, // GNSS speed white noise (ADR-0010); gnss: 2 is the position error
+  gnssReacquisitionDelay: 7, // reacquisition delay, one draw per run
+  gnssReacquisitionError: 8, // extra position error after reacquisition
 } as const
 
 export type StreamName = keyof typeof STREAM_IDS

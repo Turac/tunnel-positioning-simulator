@@ -143,3 +143,18 @@ Format: date · tool · topic · AI proposal · decision · reason.
   author raised this concern, discussed it and the proposed separation with another AI
   model, which agreed the approach was reasonable, and then asked Claude Code to make the
   change.
+
+### GNSS: converting the published accuracy into a model parameter
+
+- Claude Code took the published smartphone accuracy (4.9 m radius, open sky, GPS.gov), treated it as a 95% horizontal radius and converted it to a per-axis standard deviation: 4.9 / 2.45 ≈ 2.0 m.
+- The 95% interpretation is not stated in the source; this is recorded as an assumption.
+
+### GNSS: values without a source are marked, not invented
+
+- No published values were found for the error correlation time (60 s), the extra error after reacquisition (20 m, decaying over 10 s) or how optimistic the receiver's reported accuracy is (0.5).
+- Claude Code marked these as our own choices in ASSUMPTIONS.md instead of presenting them as sourced.
+
+### GNSS: when the first fix after the tunnel is published
+
+- In review (second model) an edge case was found: at the moment the car leaves the tunnel it is exactly at the portal, which still counts as inside. With a zero reacquisition delay the time rule and the position rule would contradict each other.
+- Rule adopted: a fix is published only when the car is outside the tunnel AND the reacquisition delay has passed.

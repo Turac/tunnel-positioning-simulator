@@ -4,7 +4,7 @@
 // Prediction at each accelerometer sample with â = f − g·sin θ(ŝ) − b. GNSS position and
 // speed are separate scalar updates with R from the reported accuracies, each behind a
 // χ² gate. Inside the tunnel there are no GNSS updates and the uncertainty grows; a
-// zero-velocity update (ZUPT) holds the speed at 0 while the car stands still (ADR-0014).
+// zero-velocity update (ZUPT) holds the speed near 0 while the car stands still (ADR-0015).
 
 import { gradeSlopeAt, pitchAt, type TunnelMap } from '../map/tunnel'
 import { STANDARD_GRAVITY } from '../physics/constants'
@@ -30,8 +30,19 @@ export const ZUPT_WINDOW = 0.5
  */
 export const ZUPT_THRESHOLD = 0.2 + 0.03 * 1
 
-/** 1σ of the zero-velocity pseudo-measurement, m/s (A-56). */
-export const ZUPT_SIGMA = 0.05
+/**
+ * 1σ of the zero-velocity pseudo-measurement, m/s (A-56). The detector only knows that the
+ * speed is below about 1 m/s, not that it is exactly 0, so the measurement claims no more.
+ */
+export const ZUPT_SIGMA = 0.5
+
+/**
+ * The detector must hold this long before the first ZUPT, and ZUPTs are then applied at
+ * most once per this interval, s (A-56). Repeating the same information at every sample
+ * would make the filter falsely certain; the hold skips brief dips below 1 m/s when the
+ * car starts or stops.
+ */
+export const ZUPT_INTERVAL = 1
 
 export interface KalmanConfig {
   /** Extra velocity random-walk intensity for unmodelled effects, (m/s²)²·s (A-53). */
@@ -54,6 +65,9 @@ export function createKalman(map: TunnelMap, config: KalmanConfig = DEFAULT_KALM
   // Recent accelerometer samples for the stationarity test, oldest first.
   const window: { t: number; f: number }[] = []
   let firstAccel: number | null = null
+  // Start of the current stationary stretch and time of the last ZUPT.
+  let stillSince: number | null = null
+  let lastZupt = -Infinity
 
   function predict(f: number, dt: number): void {
     const xs = x!
@@ -136,8 +150,14 @@ export function createKalman(map: TunnelMap, config: KalmanConfig = DEFAULT_KALM
       }
       // The window keeps filling before the first fix, so a car that starts standing still
       // is recognised at once.
-      if (m.kind === 'accel' && stationary(m) && x !== null) {
-        update(V, 0, ZUPT_SIGMA ** 2, false, false)
+      if (m.kind === 'accel') {
+        stillSince = stationary(m) ? (stillSince ?? m.t) : null
+        // 1e-9 s absorbs rounding in differences of grid times.
+        const due = (since: number) => m.t - since >= ZUPT_INTERVAL - 1e-9
+        if (x !== null && stillSince !== null && due(stillSince) && due(lastZupt)) {
+          update(V, 0, ZUPT_SIGMA ** 2, false, false)
+          lastZupt = m.t
+        }
       }
       if (x === null) return null
       return { t: m.t, s: x[S]!, v: x[V]!, sigmaS: Math.sqrt(P[S]![S]!), bias: x[B]! }

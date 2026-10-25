@@ -166,3 +166,12 @@ Format: date · tool · topic · AI proposal · decision · reason.
 - **Which scenarios are used for tuning:** the poor-sensor scenario is not used. It tests errors the filter does not know about; tuning on it would hide the problem.
 - **Number of runs:** 200 for the report set, 50 for the tuning set (Claude Code proposed 50 for both).
 - **Limitation of stop detection (ZUPT):** its threshold comes from the simulator's own vibration formula, so ZUPT results are optimistic compared with a real phone.
+
+### 2026-10-25 · Claude Code · ZUPT overconfidence found in stop-and-go
+
+- Found by: Claude Code, while running the new stop-and-go scenario. A2 error was always ~60–70 m and ±2σ coverage was ~0.
+- Root cause (Claude Code): the ZUPT told the filter "speed is exactly 0 (σ = 0.05 m/s)" at every accel sample (100 Hz). The detector cannot tell a stopped car from one crawling below ~1 m/s, so the filter trusted a wrong zero, pushed the difference into the bias estimate, and became overconfident.
+- Claude Code proposed: a 1 s hold time before ZUPT applies. Small gain (60–73 m → 54–67 m); it does not address the overconfidence.
+- Project author discussed with a separate AI chat (Claude) and accepted: ZUPT σ = 0.5 m/s (only what the detector actually knows), applied at most once per second, plus the 1 s hold.
+- Result (A2, seeds 1–3, before tuning): stop-and-go exit error 73.2 / 63.0 / 87.0 m, max error in tunnel 73.2 / 63.0 / 87.0 m, coverage 0.45 / 0.41 / 0.49 (before the fix: 0.08 / 0.01 / 0.17). Long (no stops, unchanged by the fix): exit error 128.0 / 103.8 / 203.3 m, max error 128.0 / 103.8 / 203.3 m, coverage 0.96 / 0.83 / 0.85.
+- Recorded in ADR-0015, superseding ADR-0014.

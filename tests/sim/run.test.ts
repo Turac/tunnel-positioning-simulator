@@ -3,9 +3,6 @@ import { DEFAULT_ACCELEROMETER } from '../../src/core/sensors/accelerometer'
 import { DEFAULT_GNSS } from '../../src/core/sensors/gnss'
 import { simulateRun, type RunConfig } from '../../src/core/sim/run'
 
-// Available in Node and browsers; the test tsconfig has neither DOM nor Node types.
-declare const structuredClone: <T>(value: T) => T
-
 // 20 m/s, approach 2000 m, tunnel 1000 m, departure 1000 m: runEnd = 200 s.
 const CONFIG: RunConfig = {
   map: {

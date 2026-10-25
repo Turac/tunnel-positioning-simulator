@@ -17,8 +17,14 @@ async function ruleIds(code: string, filePath: string): Promise<string[]> {
 }
 
 const ESTIMATOR = 'src/core/estimators/fixture.ts'
+const NESTED_ESTIMATOR = 'src/core/estimators/kalman/fixture.ts'
 const SENSOR = 'src/core/sensors/fixture.ts'
+const MEASUREMENT = 'src/core/sensors/measurement.ts'
+const MAP = 'src/core/map/fixture.ts'
+const SIM = 'src/core/sim/fixture.ts'
 const UI = 'src/ui/fixture.tsx'
+
+const REACT_IMPORT = "import { useState } from 'react'\nexport { useState }"
 
 describe('truth isolation: estimators', () => {
   it.each([
@@ -26,18 +32,109 @@ describe('truth isolation: estimators', () => {
     ["import type { T } from '../world'\nexport type U = T", 'type-only import from world'],
     ["export { m } from '../eval/metrics'", 're-export from eval'],
     ["export { load } from '../scenarios/load'", 're-export from scenarios'],
+    ["export { simulateRun } from '../sim/run'", 'sim module'],
+    ["export { simulateRun } from '../sim'", 'sim index'],
+    ["export { accel } from '../sensors/accelerometer'", 'sensor file other than measurement'],
+    ["export type { T } from '../sensors/accelerometer'", 'type-only sensor file'],
+    ["export { x } from '../sensors'", 'sensors index'],
+    ["export { x } from '../sensors/index'", 'sensors index file'],
+    ["export { x } from '../sensors/measurementUtils'", 'name starting with measurement'],
+    ["export { x } from '../sensors/measurement/extra'", 'path below measurement'],
   ])('rejects %j (%s)', async (code) => {
     expect(await ruleIds(code, ESTIMATOR)).toContain('no-restricted-imports')
   })
 
-  it('keeps the core restrictions in the estimators override', async () => {
-    const code = "import { useState } from 'react'\nexport { useState }"
-    expect(await ruleIds(code, ESTIMATOR)).toContain('no-restricted-imports')
+  it('applies to estimators in subdirectories', async () => {
+    const code = "export { accel } from '../../sensors/accelerometer'"
+    expect(await ruleIds(code, NESTED_ESTIMATOR)).toContain('no-restricted-imports')
   })
 
-  it('allows measurement types from sensors', async () => {
-    const code = "import type { Measurement } from '../sensors/measurement'\nexport type M = Measurement"
+  it('keeps the core restrictions in the estimators override', async () => {
+    expect(await ruleIds(REACT_IMPORT, ESTIMATOR)).toContain('no-restricted-imports')
+  })
+
+  it.each([
+    [
+      "import type { Measurement } from '../sensors/measurement'\nexport type M = Measurement",
+      ESTIMATOR,
+    ],
+    ["export { sampleTime } from '../sensors/measurement.ts'", ESTIMATOR],
+    ["export { sampleTime } from '../../sensors/measurement'", NESTED_ESTIMATOR],
+    ["export { tunnel } from '../map/tunnel'", ESTIMATOR],
+    ["export type { TunnelMap } from '../map'", ESTIMATOR],
+  ])('allows %j in %s', async (code, filePath) => {
+    expect(await ruleIds(code, filePath)).toEqual([])
+  })
+})
+
+describe('truth isolation: sensors/measurement.ts', () => {
+  it.each([
+    ["export { x } from '../world/trajectory'", 'world module'],
+    ["export type { T } from '../world'", 'type-only import from world'],
+    ["export { x } from '../sim/run'", 'sim module'],
+    ["export { x } from '../eval/metrics'", 'eval module'],
+    ["export { x } from '../scenarios/load'", 'scenarios module'],
+    ["export { accel } from './accelerometer'", 'sibling sensor file'],
+    ["export { accel } from '../sensors/accelerometer'", 'sensor file via parent path'],
+  ])('rejects %j (%s)', async (code) => {
+    expect(await ruleIds(code, MEASUREMENT)).toContain('no-restricted-imports')
+  })
+
+  it('keeps the core restrictions in the measurement override', async () => {
+    expect(await ruleIds(REACT_IMPORT, MEASUREMENT)).toContain('no-restricted-imports')
+  })
+
+  it('does not restrict other sensor files', async () => {
+    const code = "export { x } from './accelerometer'\nexport { y } from '../world/trajectory'"
+    expect(await ruleIds(code, SENSOR)).toEqual([])
+  })
+})
+
+describe('map neutrality', () => {
+  it.each([
+    ["export { x } from '../world/trajectory'", 'world module'],
+    ["export type { T } from '../world'", 'type-only import from world'],
+    ["export { x } from '../sensors/measurement'", 'sensors'],
+    ["export { x } from '../sim/run'", 'sim module'],
+    ["export { x } from '../eval/metrics'", 'eval module'],
+    ["export { x } from '../scenarios/load'", 'scenarios module'],
+  ])('rejects %j (%s)', async (code) => {
+    expect(await ruleIds(code, MAP)).toContain('no-restricted-imports')
+  })
+
+  it('keeps the core restrictions in the map override', async () => {
+    expect(await ruleIds(REACT_IMPORT, MAP)).toContain('no-restricted-imports')
+  })
+
+  it('allows world to read the map', async () => {
+    const code = "export { tunnel } from '../map/tunnel'"
+    expect(await ruleIds(code, 'src/core/world/fixture.ts')).toEqual([])
+  })
+})
+
+describe('physics neutrality', () => {
+  it.each([
+    "export { x } from '../world/trajectory'",
+    "export { x } from '../sensors/accelerometer'",
+    "export { x } from '../sim/run'",
+  ])('rejects %j', async (code) => {
+    expect(await ruleIds(code, 'src/core/physics/fixture.ts')).toContain('no-restricted-imports')
+  })
+
+  it('may be imported by estimators', async () => {
+    const code = "export { STANDARD_GRAVITY } from '../physics/constants'"
     expect(await ruleIds(code, ESTIMATOR)).toEqual([])
+  })
+})
+
+describe('sim may combine truth and sensors', () => {
+  it('allows world, sensors and map', async () => {
+    const code = [
+      "export { x } from '../world/trajectory'",
+      "export { y } from '../sensors/accelerometer'",
+      "export { z } from '../map/tunnel'",
+    ].join('\n')
+    expect(await ruleIds(code, SIM)).toEqual([])
   })
 })
 

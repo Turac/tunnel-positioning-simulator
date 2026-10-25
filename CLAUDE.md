@@ -16,12 +16,17 @@ claim about field accuracy on real devices.
 
 ```
 src/core/            Pure TypeScript. No DOM, no React, no Node APIs.
-  world/             Ground truth: tunnel geometry, speed profiles, grade, true trajectory.
+  map/               Known map data: tunnel geometry, exit position, grade profile.
+                     Neutral: imported by world/ and estimators/, imports neither.
+  world/             Ground truth: speed profiles and the true trajectory on the map.
   sensors/           Turns ground truth into noisy measurements (IMU, GNSS, ...).
-  estimators/        Position estimators. Consume measurements ONLY.
+                     measurement.ts holds the Measurement types and is truth-free.
+  sim/               Runs a scenario: truth plus the measurement stream for one seed.
+  estimators/        Position estimators. Consume measurements and the map ONLY.
   eval/              Metrics and Monte Carlo runner. The only place truth meets estimates.
   scenarios/         Scenario loading and validation.
   random/            Seeded PRNG and Gaussian sampling.
+  physics/           Physical constants. Neutral like map/: imported by estimators/ too.
 src/ui/              React + SVG visualisation. Reads from core, never the other way.
 scripts/             Node CLI entry points (batch evaluation).
 scenarios/           Scenario definitions (JSON).
@@ -31,9 +36,11 @@ docs/                Assumptions, decisions (ADRs), AI log, report.
 
 ### Hard rules
 
-1. **Truth isolation.** `estimators/` must never import from `world/` or receive ground-truth
-   values. Estimators see a stream of `Measurement` objects and nothing else. This is enforced
-   by ESLint (`no-restricted-imports` per directory); do not disable or work around that rule.
+1. **Truth isolation.** `estimators/` must never import from `world/` or `sim/` or receive
+   ground-truth values. Estimators see a stream of `Measurement` objects and the known map
+   (`map/`), and nothing else; from `sensors/` they may import `measurement.ts` only. This is
+   enforced by ESLint (`no-restricted-imports` per directory); do not disable or work around
+   that rule.
 2. **Determinism.** Never use `Math.random()` in `src/core/`. All randomness goes through the
    seeded PRNG in `random/`. Same scenario + same seed = identical output.
 3. **No inverse crime.** The sensor simulator may model error sources that estimators do not
@@ -88,7 +95,8 @@ new dependency, data format, architecture change):
   delivered, the decisions taken (with ADR links) and known limitations.
 - **Conventional Commits** in English: `type(scope): imperative summary`
   - types: `feat`, `fix`, `test`, `refactor`, `docs`, `chore`, `perf`
-  - scopes: `world`, `sensors`, `estimators`, `eval`, `scenarios`, `ui`, `random`, `cli`, `docs`
+  - scopes: `map`, `world`, `sensors`, `sim`, `estimators`, `eval`, `scenarios`, `ui`,
+    `random`, `cli`, `docs`
   - e.g. `feat(sensors): add accelerometer bias random walk`
   - summary ≤ 72 characters; a body explains *why* when the change is not obvious.
 - One logical change per commit. Code and its tests go in the same commit.

@@ -18,6 +18,12 @@ describe('stream ID table', () => {
     expect(STREAM_IDS).toEqual({
       accelerometer: 1,
       gnss: 2,
+      accelBiasInitial: 3,
+      accelBiasDrift: 4,
+      accelVibration: 5,
+      gnssSpeed: 6,
+      gnssReacquisitionDelay: 7,
+      gnssReacquisitionError: 8,
     })
   })
 

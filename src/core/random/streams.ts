@@ -6,8 +6,14 @@
 // tests/random/streams.test.ts pins this table. IDs start at 1 (see streamInput in rng.ts).
 
 export const STREAM_IDS = {
-  accelerometer: 1,
+  accelerometer: 1, // accelerometer sensor white noise (ADR-0009)
   gnss: 2,
+  accelBiasInitial: 3, // accelerometer turn-on bias, one draw per run
+  accelBiasDrift: 4, // accelerometer bias random-walk increments
+  accelVibration: 5, // vibration phase, one draw per run
+  gnssSpeed: 6, // GNSS speed white noise (ADR-0010); gnss: 2 is the position error
+  gnssReacquisitionDelay: 7, // reacquisition delay, one draw per run
+  gnssReacquisitionError: 8, // extra position error after reacquisition
 } as const
 
 export type StreamName = keyof typeof STREAM_IDS

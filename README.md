@@ -48,6 +48,22 @@ the same scenario and seed give the same output.
 - The PRNG test vectors come from the authors' official C implementations, stored
   unmodified in `tests/reference/` with instructions to rebuild and compare them.
 
+## Simulation
+
+`simulateRun(config, seed)` (`src/core/sim/run.ts`) produces one run as plain data:
+
+- **map**: tunnel geometry, exit position and grade profile, known to the estimators
+  (ADR-0007).
+- **truth**: the car's true position, speed, acceleration and road pitch on the
+  accelerometer grid, from a piecewise-linear speed profile; the run ends when the car
+  reaches the road end (ADR-0008).
+- **measurements**: time-sorted accelerometer samples (100 Hz specific force with noise,
+  bias, drift, vibration and optional mounting errors; ADR-0009) and GNSS fixes (1 Hz,
+  correlated error, lost in the tunnel, delayed and inflated after the exit; ADR-0010).
+
+Estimators may only see `map` and `measurements`; lint rules enforce this. Every value
+and its source, or the lack of one, is in `docs/ASSUMPTIONS.md`.
+
 ## Repository layout
 
 See `CLAUDE.md` for the architecture and conventions.

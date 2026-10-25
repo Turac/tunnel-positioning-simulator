@@ -51,7 +51,8 @@ export interface KalmanConfig {
   readonly gnssRScale: number
 }
 
-export const DEFAULT_KALMAN: KalmanConfig = { qExtra: 0, gnssRScale: 1 }
+/** Tuned on the tuning seed set (A-53, A-54, ADR-0017). */
+export const DEFAULT_KALMAN: KalmanConfig = { qExtra: 3e-4, gnssRScale: 2 }
 
 const S = 0
 const V = 1

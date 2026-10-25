@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Estimate, Estimator } from '../../src/core/estimators/estimator'
-import { createKalman, GATE } from '../../src/core/estimators/kalman'
+import { createKalman, DEFAULT_KALMAN, GATE } from '../../src/core/estimators/kalman'
 import { createTunnelMap } from '../../src/core/map/tunnel'
 
 // Flat road, car at a constant 20 m/s; the accelerometer reads a constant bias of
@@ -67,7 +67,7 @@ describe('A2 Kalman filter', () => {
     const z = -3000 + 20 * 103 + 60
     const after = a2.step({ kind: 'gnss', t: 103, s: z, speed: 20, reportedSigma: R_SIGMA, reportedSpeedSigma: 0.5 })!
     const nu = z - before.s
-    const R = R_SIGMA ** 2
+    const R = (DEFAULT_KALMAN.gnssRScale * R_SIGMA) ** 2
     const P = Math.max(before.sigmaS ** 2, (nu * nu) / GATE - R)
     // Speed update after the position update moves s only a little (small cross term).
     expect(after.s).toBeCloseTo(before.s + (P / (P + R)) * nu, 0)

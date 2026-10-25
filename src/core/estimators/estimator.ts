@@ -4,7 +4,7 @@
 // time order. It never sees a future sample and never receives ground truth (CLAUDE.md hard
 // rule 1).
 
-import type { TunnelMap } from '../map/tunnel'
+import { roadEnd, roadStart, type TunnelMap } from '../map/tunnel'
 import type { Measurement } from '../sensors/measurement'
 
 export interface Estimate {
@@ -27,6 +27,11 @@ export interface Estimator {
 export interface EstimatorEntry {
   readonly id: string
   create(map: TunnelMap): Estimator
+}
+
+/** An estimate can leave the road; map lookups use the nearest point on it. */
+export function clampToRoad(map: TunnelMap, s: number): number {
+  return Math.min(Math.max(s, roadStart(map)), roadEnd(map))
 }
 
 /** Runs an estimator over a measurement stream and returns its output at each accel sample. */

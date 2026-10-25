@@ -62,3 +62,14 @@ Changing a value requires updating this file in the same commit.
 | A-40 | Exit announcements are made at fixed lead distances before the exit, triggered when the estimate reaches the announcement point. | 400 m and 100 m | **Our choice**, not a product requirement: one early notice and one final notice before the turn. See ADR-0012. | chosen |
 | A-41 | Recovery threshold after the tunnel: the estimate counts as recovered once its position error stays below this value to the end of the run. | 5 m | **Our choice**, a demo threshold: slightly above the open-sky GNSS 2σ (2 × 2.0 m, A-25), so a recovered estimate is about as good as GNSS. No product threshold is given in the task. See ADR-0012. | chosen |
 | A-42 | Results are reported over multiple seeds as median / P95 / max. | ≥ 50 seeds | Single runs hide variance. | chosen |
+
+## Estimators
+
+The estimators' own sensor model (`src/core/estimators/sensor-model.ts`). Values come from
+datasheets and stated assumptions, never from the simulator's config; they match the
+simulator's defaults only where both use the same source.
+
+| ID | Assumption | Value | Rationale | Status |
+|---|---|---|---|---|
+| A-50 | Accelerometer white noise density assumed by the estimators. | 160 µg/√Hz; velocity random-walk intensity ND²/2 ≈ 1.23·10⁻⁶ (m/s²)²·s | Same datasheet as A-23 (Bosch BMI270). A sample σ of ND·√(fs/2) integrated over Δt = 1/fs adds ND²/2 per second to the speed variance, independent of the rate. | chosen |
+| A-51 | Prior 1σ of the constant accelerometer offset. | √((10 mg)² + (g·sin 5° / 2)²) ≈ 0.44 m/s² | Turn-on bias 10 mg (datasheet ±20 mg as 2σ, A-23) plus the offset g·sin δ of a residual mount misalignment up to 5° (A-21) taken as 2σ; on a flat road a misalignment looks like a constant bias. A1 does not estimate it, so its position σ grows with ½·0.44·Δt². | chosen |

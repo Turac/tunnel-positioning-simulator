@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   createTunnelMap,
   gradeAt,
+  gradeSlopeAt,
   isInTunnel,
   pitchAt,
   roadEnd,
@@ -80,6 +81,17 @@ describe('grade profile', () => {
   it('is continuous across a keypoint', () => {
     expect(gradeAt(map, 500 - 1e-9)).toBeCloseTo(0.04, 9)
     expect(gradeAt(map, 500 + 1e-9)).toBeCloseTo(0.04, 9)
+  })
+
+  it.each([
+    [-100, 0],
+    [0, 8e-5], // keypoint: the segment that starts here, 0.04 / 500
+    [250, 8e-5],
+    [500, -1.2e-4], // (−0.02 − 0.04) / 500
+    [1000, 0],
+    [1100, 0], // road end: last segment
+  ])('grade slope at s = %d m is %d per metre', (s, slope) => {
+    expect(gradeSlopeAt(map, s)).toBeCloseTo(slope, 15)
   })
 
   it('pitch is atan(grade)', () => {

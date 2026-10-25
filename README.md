@@ -3,8 +3,8 @@
 Simulator and evaluation harness for estimating a car's position while GNSS is unavailable
 inside a road tunnel.
 
-> Status: work in progress. Phase 0 (scaffolding, module boundaries, seeded PRNG) is
-> complete; the simulation itself starts in Phase 1.
+> Status: work in progress. Simulation (Phase 1) and estimation with its evaluation
+> (Phase 2) are complete; the visual simulator and the report follow in Phase 3.
 
 ## What this is
 
@@ -32,6 +32,7 @@ npm test            # run all tests once
 npm run test:watch  # run tests in watch mode
 npm run typecheck   # type-check without emitting
 npm run lint        # lint, including module-boundary rules
+npm run eval        # Monte Carlo evaluation, writes out/eval-report.md
 ```
 
 Before every commit, `npm test`, `npm run typecheck` and `npm run lint` must pass.
@@ -63,6 +64,29 @@ the same scenario and seed give the same output.
 
 Estimators may only see `map` and `measurements`; lint rules enforce this. Every value
 and its source, or the lack of one, is in `docs/ASSUMPTIONS.md`.
+
+## Estimation and evaluation
+
+Three estimators (`src/core/estimators/`) see only the map and the measurements, one at a
+time, and give a position with its own uncertainty at every accelerometer sample
+(ADR-0011):
+
+- **B0**: constant speed from the last GNSS fix.
+- **A1**: accelerometer integration with gravity removed using the map's grade; no bias
+  estimate.
+- **A2**: Kalman filter with position, speed and accelerometer bias, the grade in its
+  Jacobian, gated GNSS updates and zero-velocity updates at stops (ADR-0013 to ADR-0015,
+  tuning in ADR-0017).
+
+Five scenarios (`src/core/scenarios/`): baseline 1 km, long 5 km, stop-and-go, graded and
+poor-sensor. The metrics (`src/core/eval/`, ADR-0012) are the error at the tunnel exit, the
+largest error inside, the exit announcements at 400 m and 100 m (early or late, in metres
+and seconds), the ±2σ coverage and the behaviour when GNSS returns.
+
+`npm run eval` runs every scenario and estimator on 200 report seeds
+(`-- --set tuning` for the 50 tuning seeds, `-- --runs N` to change the count) and writes a
+markdown table to `out/eval-<set>.md` (ADR-0016, ADR-0018). Tuning and report seeds never
+overlap.
 
 ## Repository layout
 

@@ -151,6 +151,23 @@ export function gradeAt(map: TunnelMap, s: number): number {
   throw new RangeError(`No grade keypoint covers s = ${s} m`)
 }
 
+/**
+ * Rate of change of the grade along the road at s, 1/m: constant between keypoints.
+ * Right-continuous at a keypoint (the slope of the segment that starts there); at the road
+ * end it is the last segment's slope. Used by the Kalman filter's Jacobian (ADR-0013).
+ */
+export function gradeSlopeAt(map: TunnelMap, s: number): number {
+  assertOnRoad(map, s)
+  const points = map.grade
+  for (let i = 1; i < points.length; i++) {
+    const a = points[i - 1]!
+    const b = points[i]!
+    if (s < b.s || i === points.length - 1) return (b.grade - a.grade) / (b.s - a.s)
+  }
+  // Unreachable: createTunnelMap guarantees at least two keypoints.
+  throw new RangeError(`No grade keypoint covers s = ${s} m`)
+}
+
 /** Road pitch angle at s, rad: atan(grade). Positive uphill. */
 export function pitchAt(map: TunnelMap, s: number): number {
   return Math.atan(gradeAt(map, s))

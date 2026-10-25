@@ -21,6 +21,30 @@ export interface AnnouncementMetric {
   readonly timeError: number | null
 }
 
+/** Where an estimator triggered one exit announcement, as sample indices. */
+export interface AnnouncementEvent {
+  readonly lead: number
+  /** Announcement point exitS − lead, m. */
+  readonly target: number
+  /** First sample with ŝ ≥ target; null if the estimate never reaches it. */
+  readonly kEst: number | null
+  /** First sample with true s ≥ target. */
+  readonly kTrue: number
+}
+
+/** Announcement events at each lead distance (A-40), shared by the metrics and the UI. */
+export function announcementEvents(
+  run: RunResult,
+  estimates: readonly (Estimate | null)[],
+): AnnouncementEvent[] {
+  const truth = run.truth.samples
+  return ANNOUNCEMENT_LEADS.map((lead): AnnouncementEvent => {
+    const target = run.map.exitS - lead
+    const kEst = estimates.findIndex((e) => e !== null && e.s >= target)
+    return { lead, target, kEst: kEst < 0 ? null : kEst, kTrue: truth.findIndex((x) => x.s >= target) }
+  })
+}
+
 export interface RunMetrics {
   /** |ŝ − s| at the last sample inside the tunnel, m. */
   readonly exitError: number
@@ -72,17 +96,12 @@ export function computeMetrics(run: RunResult, estimates: readonly (Estimate | n
   }
   if (inside === 0) throw new RangeError('No truth sample lies inside the tunnel')
 
-  const announcements = ANNOUNCEMENT_LEADS.map((lead): AnnouncementMetric => {
-    const target = run.map.exitS - lead
-    const kTrue = truth.findIndex((x) => x.s >= target)
-    const kEst = estimates.findIndex((e) => e !== null && e.s >= target)
-    if (kEst < 0) return { lead, distanceError: null, timeError: null }
-    return {
-      lead,
-      distanceError: truth[kEst]!.s - target,
-      timeError: truth[kEst]!.t - truth[kTrue]!.t,
-    }
-  })
+  const announcements = announcementEvents(run, estimates).map(
+    ({ lead, target, kEst, kTrue }): AnnouncementMetric =>
+      kEst === null
+        ? { lead, distanceError: null, timeError: null }
+        : { lead, distanceError: truth[kEst]!.s - target, timeError: truth[kEst]!.t - truth[kTrue]!.t },
+  )
 
   let returnJump = 0
   let lastBad = -1

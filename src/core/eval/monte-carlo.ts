@@ -73,7 +73,7 @@ export function percentile(values: readonly number[], p: number): number {
   return sorted[lo]! + (sorted[hi]! - sorted[lo]!) * (h - lo)
 }
 
-interface Column {
+export interface Column {
   readonly title: string
   readonly value: (m: RunMetrics) => number | null
   readonly digits: number
@@ -83,7 +83,8 @@ interface Column {
 
 const mean = (xs: readonly number[]): number => xs.reduce((a, b) => a + b, 0) / xs.length
 
-const COLUMNS: readonly Column[] = [
+/** Result table columns, shared by the markdown report and the visual simulator. */
+export const COLUMNS: readonly Column[] = [
   { title: 'Exit error (m)', value: (m) => m.exitError, digits: 1 },
   { title: 'Max tunnel error (m)', value: (m) => m.maxTunnelError, digits: 1 },
   { title: 'Ann. 400 m (m)', value: (m) => m.announcements[0]!.distanceError, digits: 1 },

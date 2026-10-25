@@ -188,6 +188,21 @@ describe('core: determinism', () => {
   })
 })
 
+describe('ui reads truth only through eval', () => {
+  it.each([
+    "export { simulateRun } from '../core/sim/run'",
+    "export type { TruthState } from '../core/world/trajectory'",
+    "export { x } from '../../core/sim'",
+  ])('rejects %j', async (code) => {
+    expect(await ruleIds(code, UI)).toContain('no-restricted-imports')
+  })
+
+  it('allows eval and scenarios', async () => {
+    const code = "export { runSingle } from '../core/eval/single-run'\nexport { SCENARIOS } from '../core/scenarios/scenarios'"
+    expect(await ruleIds(code, UI)).toEqual([])
+  })
+})
+
 describe('ui is not restricted by core rules', () => {
   it('allows React and Math.random', async () => {
     const code = "import { useState } from 'react'\nexport const s = useState(Math.random())"

@@ -158,3 +158,11 @@ Format: date · tool · topic · AI proposal · decision · reason.
 
 - In review (second model) an edge case was found: at the moment the car leaves the tunnel it is exactly at the portal, which still counts as inside. With a zero reacquisition delay the time rule and the position rule would contradict each other.
 - Rule adopted: a fix is published only when the car is outside the tunnel AND the reacquisition delay has passed.
+
+### 2026-10-25 · Claude Code · Phase 2 plan review
+
+- **Ranking of the methods:** Claude Code assumed the order A2, then A1, then B0. The project author asked to read the order from the results table instead. A1 is probably the worst, because it does not correct the sensor bias: a small bias of 0.1 m/s² grows into kilometres of position error in 250 s.
+- **When GNSS returns after the tunnel:** if the filter rejects 3 GNSS fixes in a row, Claude Code proposed moving the position directly to the GNSS position. The project author rejected this: just after the exit the GNSS fix itself can be about 15 m wrong. Instead, the filter increases its own uncertainty and then accepts the fix with normal weighting.
+- **Which scenarios are used for tuning:** the poor-sensor scenario is not used. It tests errors the filter does not know about; tuning on it would hide the problem.
+- **Number of runs:** 200 for the report set, 50 for the tuning set (Claude Code proposed 50 for both).
+- **Limitation of stop detection (ZUPT):** its threshold comes from the simulator's own vibration formula, so ZUPT results are optimistic compared with a real phone.

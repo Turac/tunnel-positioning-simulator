@@ -26,9 +26,15 @@ export interface GnssConfig {
   /** Reported σ as a fraction of the model σ: open sky and extra error (A-38). */
   readonly reportedScaleOpen: number
   readonly reportedScaleReacquisition: number
+  /**
+   * Off-by-default exit jump: a constant along-track offset on every fix in
+   * [t_reacq, t_reacq + exitJumpDuration), not reflected in the reported σ, m (A-39).
+   */
+  readonly exitJumpOffset: number
+  readonly exitJumpDuration: number
 }
 
-/** Default phone GNSS (A-24, A-25, A-34..A-38). */
+/** Default phone GNSS (A-24, A-25, A-34..A-39). */
 export const DEFAULT_GNSS: GnssConfig = {
   rateHz: 1,
   positionSigma: 2.0,
@@ -40,6 +46,8 @@ export const DEFAULT_GNSS: GnssConfig = {
   reacquisitionTau: 10,
   reportedScaleOpen: 1,
   reportedScaleReacquisition: 0.5,
+  exitJumpOffset: 0,
+  exitJumpDuration: 0,
 }
 
 export function simulateGnss(
@@ -94,10 +102,14 @@ export function simulateGnss(
       t >= reacquisitionTime
         ? config.reacquisitionSigma * Math.exp(-(t - reacquisitionTime) / config.reacquisitionTau)
         : 0
+    const jump =
+      t >= reacquisitionTime && t < reacquisitionTime + config.exitJumpDuration
+        ? config.exitJumpOffset
+        : 0
     out.push({
       kind: 'gnss',
       t,
-      s: truth.s + positionError + extraSigma * extraUnit,
+      s: truth.s + positionError + extraSigma * extraUnit + jump,
       // Receivers report speed >= 0; clamping biases the reading slightly near a stop.
       speed: Math.max(0, truth.v + speedError),
       reportedSigma: Math.hypot(

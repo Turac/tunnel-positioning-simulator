@@ -139,3 +139,16 @@ describe('determinism and publication independence', () => {
     for (const t of common) expect(b.get(t)).toBe(a.get(t))
   })
 })
+
+describe('exit jump (off by default)', () => {
+  it('offsets only the fixes in [t_reacq, t_reacq + duration) and leaves the reported σ', () => {
+    // Exit at t = 150 s, delay 3 s → t_reacq = 153 s; jump on the fixes at 153..157 s.
+    const traj = cruise()
+    const base = { ...QUIET, reacquisitionDelayMin: 3, reacquisitionDelayMax: 3 }
+    const plain = simulateGnss(traj, base, 1)
+    const jumped = simulateGnss(traj, { ...base, exitJumpOffset: 30, exitJumpDuration: 5 }, 1)
+    const offsets = jumped.map((m, i) => [m.t, m.s - plain[i]!.s])
+    expect(offsets.filter(([, d]) => d !== 0)).toEqual([153, 154, 155, 156, 157].map((t) => [t, 30]))
+    expect(jumped.map((m) => m.reportedSigma)).toEqual(plain.map((m) => m.reportedSigma))
+  })
+})

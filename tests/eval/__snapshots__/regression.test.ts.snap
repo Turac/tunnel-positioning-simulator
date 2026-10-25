@@ -1,0 +1,621 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`scenario baseline > seed 1 gives unchanged metrics 1`] = `
+{
+  "A1": {
+    "announcements": [
+      {
+        "distanceError": -12.888888888889142,
+        "lead": 400,
+        "timeError": -0.6700000000000017,
+      },
+      {
+        "distanceError": -35.41666666666697,
+        "lead": 100,
+        "timeError": -1.8300000000000125,
+      },
+    ],
+    "coverage": 1,
+    "exitError": 106.8350325493468,
+    "maxTunnelError": 106.8350325493468,
+    "recoveryTime": 13.009999999999991,
+    "returnJump": 149.48658378993142,
+  },
+  "A2": {
+    "announcements": [
+      {
+        "distanceError": -2.7777777777778283,
+        "lead": 400,
+        "timeError": -0.15000000000000568,
+      },
+      {
+        "distanceError": -1.777777777778283,
+        "lead": 100,
+        "timeError": -0.10000000000002274,
+      },
+    ],
+    "coverage": 0.927085358740035,
+    "exitError": 1.0953230766350543,
+    "maxTunnelError": 2.9921390262475223,
+    "recoveryTime": 3.009999999999991,
+    "returnJump": 6.502775622598645,
+  },
+  "B0": {
+    "announcements": [
+      {
+        "distanceError": -10.16666666666697,
+        "lead": 400,
+        "timeError": -0.5300000000000011,
+      },
+      {
+        "distanceError": -20.833333333333485,
+        "lead": 100,
+        "timeError": -1.0800000000000125,
+      },
+    ],
+    "coverage": 0.9679175578456154,
+    "exitError": 39.72928148859933,
+    "maxTunnelError": 39.72928148859933,
+    "recoveryTime": 13.009999999999991,
+    "returnJump": 52.14344167407054,
+  },
+}
+`;
+
+exports[`scenario baseline > seed 1000001 gives unchanged metrics 1`] = `
+{
+  "A1": {
+    "announcements": [
+      {
+        "distanceError": -14.444444444444343,
+        "lead": 400,
+        "timeError": -0.75,
+      },
+      {
+        "distanceError": -54.86111111111131,
+        "lead": 100,
+        "timeError": -2.8300000000000125,
+      },
+    ],
+    "coverage": 1,
+    "exitError": 228.88158875991235,
+    "maxTunnelError": 228.88158875991235,
+    "recoveryTime": 28.00999999999999,
+    "returnJump": 382.84910137762364,
+  },
+  "A2": {
+    "announcements": [
+      {
+        "distanceError": -2.9722222222226264,
+        "lead": 400,
+        "timeError": -0.1600000000000108,
+      },
+      {
+        "distanceError": -5.66666666666697,
+        "lead": 100,
+        "timeError": -0.30000000000001137,
+      },
+    ],
+    "coverage": 1,
+    "exitError": 13.805522062223986,
+    "maxTunnelError": 13.805522062223986,
+    "recoveryTime": 12.009999999999991,
+    "returnJump": 9.618181803660724,
+  },
+  "B0": {
+    "announcements": [
+      {
+        "distanceError": -6.66666666666697,
+        "lead": 400,
+        "timeError": -0.3500000000000085,
+      },
+      {
+        "distanceError": -14.222222222222172,
+        "lead": 100,
+        "timeError": -0.7400000000000091,
+      },
+    ],
+    "coverage": 1,
+    "exitError": 27.983076972010394,
+    "maxTunnelError": 27.983076972010394,
+    "recoveryTime": 28.00999999999999,
+    "returnJump": 35.39605885546913,
+  },
+}
+`;
+
+exports[`scenario graded > seed 1 gives unchanged metrics 1`] = `
+{
+  "A1": {
+    "announcements": [
+      {
+        "distanceError": -103.02777777777828,
+        "lead": 400,
+        "timeError": -5.300000000000011,
+      },
+      {
+        "distanceError": -174.36111111111177,
+        "lead": 100,
+        "timeError": -8.970000000000027,
+      },
+    ],
+    "coverage": 1,
+    "exitError": 451.25821321083913,
+    "maxTunnelError": 451.25821321083913,
+    "recoveryTime": 13.009999999999991,
+    "returnJump": 505.9642448191186,
+  },
+  "A2": {
+    "announcements": [
+      {
+        "distanceError": 5.472222222222172,
+        "lead": 400,
+        "timeError": 0.28000000000000114,
+      },
+      {
+        "distanceError": 11.916666666666515,
+        "lead": 100,
+        "timeError": 0.6099999999999852,
+      },
+    ],
+    "coverage": 0.9637371184133774,
+    "exitError": 27.40313477697373,
+    "maxTunnelError": 27.40313477697373,
+    "recoveryTime": 5.009999999999991,
+    "returnJump": 33.632356942779914,
+  },
+  "B0": {
+    "announcements": [
+      {
+        "distanceError": -41.77777777777783,
+        "lead": 400,
+        "timeError": -2.1500000000000057,
+      },
+      {
+        "distanceError": -52.250000000000455,
+        "lead": 100,
+        "timeError": -2.690000000000026,
+      },
+    ],
+    "coverage": 0.9839587789228077,
+    "exitError": 75.99275591529704,
+    "maxTunnelError": 75.99275591529704,
+    "recoveryTime": 13.009999999999991,
+    "returnJump": 78.75306482446759,
+  },
+}
+`;
+
+exports[`scenario graded > seed 1000001 gives unchanged metrics 1`] = `
+{
+  "A1": {
+    "announcements": [
+      {
+        "distanceError": -190.52777777777828,
+        "lead": 400,
+        "timeError": -9.800000000000011,
+      },
+      {
+        "distanceError": -303.86111111111177,
+        "lead": 100,
+        "timeError": -15.630000000000024,
+      },
+    ],
+    "coverage": 1,
+    "exitError": 1047.0694534952195,
+    "maxTunnelError": 1047.0694534952195,
+    "recoveryTime": 25.00999999999999,
+    "returnJump": 1358.3767996305692,
+  },
+  "A2": {
+    "announcements": [
+      {
+        "distanceError": -14.361111111111313,
+        "lead": 400,
+        "timeError": -0.7400000000000091,
+      },
+      {
+        "distanceError": -26.38888888888914,
+        "lead": 100,
+        "timeError": -1.3600000000000136,
+      },
+    ],
+    "coverage": 1,
+    "exitError": 58.914169928181764,
+    "maxTunnelError": 58.914169928181764,
+    "recoveryTime": 14.009999999999991,
+    "returnJump": 64.61173442774617,
+  },
+  "B0": {
+    "announcements": [
+      {
+        "distanceError": -29.72222222222217,
+        "lead": 400,
+        "timeError": -1.5300000000000011,
+      },
+      {
+        "distanceError": -37.47222222222217,
+        "lead": 100,
+        "timeError": -1.9300000000000068,
+      },
+    ],
+    "coverage": 1,
+    "exitError": 54.390079486197465,
+    "maxTunnelError": 54.390079486197465,
+    "recoveryTime": 25.00999999999999,
+    "returnJump": 71.73626160842899,
+  },
+}
+`;
+
+exports[`scenario long > seed 1 gives unchanged metrics 1`] = `
+{
+  "A1": {
+    "announcements": [
+      {
+        "distanceError": -667.3333333333339,
+        "lead": 400,
+        "timeError": -34.31999999999999,
+      },
+      {
+        "distanceError": -757.1388888888887,
+        "lead": 100,
+        "timeError": -38.94,
+      },
+    ],
+    "coverage": 1,
+    "exitError": 1810.386579113503,
+    "maxTunnelError": 1810.386579113503,
+    "recoveryTime": 17.00999999999999,
+    "returnJump": 1943.9473039640166,
+  },
+  "A2": {
+    "announcements": [
+      {
+        "distanceError": 59.694444444443434,
+        "lead": 400,
+        "timeError": 3.069999999999993,
+      },
+      {
+        "distanceError": 69.44444444444434,
+        "lead": 100,
+        "timeError": 3.569999999999993,
+      },
+    ],
+    "coverage": 0.985417071748007,
+    "exitError": 101.62540527330839,
+    "maxTunnelError": 101.62540527330839,
+    "recoveryTime": 19.00999999999999,
+    "returnJump": 125.51896273902045,
+  },
+  "B0": {
+    "announcements": [
+      {
+        "distanceError": -129.30555555555566,
+        "lead": 400,
+        "timeError": -6.649999999999977,
+      },
+      {
+        "distanceError": -139.77777777777828,
+        "lead": 100,
+        "timeError": -7.189999999999998,
+      },
+    ],
+    "coverage": 0.9935835115691231,
+    "exitError": 184.7831791953913,
+    "maxTunnelError": 184.7831791953913,
+    "recoveryTime": 17.00999999999999,
+    "returnJump": 174.0987679557613,
+  },
+}
+`;
+
+exports[`scenario long > seed 1000001 gives unchanged metrics 1`] = `
+{
+  "A1": {
+    "announcements": [
+      {
+        "distanceError": -1202.4444444444453,
+        "lead": 400,
+        "timeError": -61.84,
+      },
+      {
+        "distanceError": -1352.916666666667,
+        "lead": 100,
+        "timeError": -69.58000000000001,
+      },
+    ],
+    "coverage": 1,
+    "exitError": 5086.689447204141,
+    "maxTunnelError": 5086.689447204141,
+    "recoveryTime": 21.370000000000005,
+    "returnJump": 5820.3570532987,
+  },
+  "A2": {
+    "announcements": [
+      {
+        "distanceError": -136.8888888888896,
+        "lead": 400,
+        "timeError": -7.0400000000000205,
+      },
+      {
+        "distanceError": -160.97222222222354,
+        "lead": 100,
+        "timeError": -8.28000000000003,
+      },
+    ],
+    "coverage": 0.5747229243632122,
+    "exitError": 286.9603967906769,
+    "maxTunnelError": 286.9603967906769,
+    "recoveryTime": 10.009999999999991,
+    "returnJump": 326.6319165515437,
+  },
+  "B0": {
+    "announcements": [
+      {
+        "distanceError": -94.11111111111131,
+        "lead": 400,
+        "timeError": -4.839999999999975,
+      },
+      {
+        "distanceError": -101.86111111111131,
+        "lead": 100,
+        "timeError": -5.240000000000009,
+      },
+    ],
+    "coverage": 1,
+    "exitError": 133.61108702875845,
+    "maxTunnelError": 133.61108702875845,
+    "recoveryTime": 21.360000000000014,
+    "returnJump": 153.36657195095788,
+  },
+}
+`;
+
+exports[`scenario poor-sensor > seed 1 gives unchanged metrics 1`] = `
+{
+  "A1": {
+    "announcements": [
+      {
+        "distanceError": -380.6944444444448,
+        "lead": 400,
+        "timeError": -19.580000000000013,
+      },
+      {
+        "distanceError": -536.8055555555557,
+        "lead": 100,
+        "timeError": -27.610000000000014,
+      },
+    ],
+    "coverage": 0.9662648259770562,
+    "exitError": 2705.46280815596,
+    "maxTunnelError": 2705.46280815596,
+    "recoveryTime": 13.009999999999991,
+    "returnJump": 3280.6934457770685,
+  },
+  "A2": {
+    "announcements": [
+      {
+        "distanceError": 16.16666666666606,
+        "lead": 400,
+        "timeError": 0.8299999999999841,
+      },
+      {
+        "distanceError": 27.86111111111086,
+        "lead": 100,
+        "timeError": 1.4299999999999784,
+      },
+    ],
+    "coverage": 0.745770950806922,
+    "exitError": 59.35590273221851,
+    "maxTunnelError": 59.35590273221851,
+    "recoveryTime": 10.009999999999991,
+    "returnJump": 106.10472582663604,
+  },
+  "B0": {
+    "announcements": [
+      {
+        "distanceError": -41.77777777777783,
+        "lead": 400,
+        "timeError": -2.1500000000000057,
+      },
+      {
+        "distanceError": -52.250000000000455,
+        "lead": 100,
+        "timeError": -2.690000000000026,
+      },
+    ],
+    "coverage": 0.9839587789228077,
+    "exitError": 75.99275591529704,
+    "maxTunnelError": 75.99275591529704,
+    "recoveryTime": 13.009999999999991,
+    "returnJump": 48.75306482446759,
+  },
+}
+`;
+
+exports[`scenario poor-sensor > seed 1000001 gives unchanged metrics 1`] = `
+{
+  "A1": {
+    "announcements": [
+      {
+        "distanceError": -462.5555555555561,
+        "lead": 400,
+        "timeError": -23.79000000000002,
+      },
+      {
+        "distanceError": -642.9722222222226,
+        "lead": 100,
+        "timeError": -33.07000000000002,
+      },
+    ],
+    "coverage": 0.9216410655259576,
+    "exitError": 4282.113055957852,
+    "maxTunnelError": 4282.113055957852,
+    "recoveryTime": 25.00999999999999,
+    "returnJump": 5899.96070496995,
+  },
+  "A2": {
+    "announcements": [
+      {
+        "distanceError": -39.05555555555611,
+        "lead": 400,
+        "timeError": -2.0100000000000193,
+      },
+      {
+        "distanceError": -57.5,
+        "lead": 100,
+        "timeError": -2.960000000000008,
+      },
+    ],
+    "coverage": 0,
+    "exitError": 119.81855753607942,
+    "maxTunnelError": 119.81855753607942,
+    "recoveryTime": 27.00999999999999,
+    "returnJump": 141.41541968360414,
+  },
+  "B0": {
+    "announcements": [
+      {
+        "distanceError": -29.72222222222217,
+        "lead": 400,
+        "timeError": -1.5300000000000011,
+      },
+      {
+        "distanceError": -37.47222222222217,
+        "lead": 100,
+        "timeError": -1.9300000000000068,
+      },
+    ],
+    "coverage": 1,
+    "exitError": 54.390079486197465,
+    "maxTunnelError": 54.390079486197465,
+    "recoveryTime": 25.00999999999999,
+    "returnJump": 41.73626160842898,
+  },
+}
+`;
+
+exports[`scenario stop-and-go > seed 1 gives unchanged metrics 1`] = `
+{
+  "A1": {
+    "announcements": [
+      {
+        "distanceError": -436.3611111111113,
+        "lead": 400,
+        "timeError": -22.450000000000017,
+      },
+      {
+        "distanceError": -513.7222222222222,
+        "lead": 100,
+        "timeError": -26.42999999999998,
+      },
+    ],
+    "coverage": 1,
+    "exitError": 998.3571634495793,
+    "maxTunnelError": 998.3571634495793,
+    "recoveryTime": 18.00999999999999,
+    "returnJump": 1122.5786650917998,
+  },
+  "A2": {
+    "announcements": [
+      {
+        "distanceError": 39.05555555555566,
+        "lead": 400,
+        "timeError": 2,
+      },
+      {
+        "distanceError": 50.16666666666606,
+        "lead": 100,
+        "timeError": 2.569999999999993,
+      },
+    ],
+    "coverage": 0.5213315579227696,
+    "exitError": 71.85639895149643,
+    "maxTunnelError": 71.85639895149643,
+    "recoveryTime": 18.00999999999999,
+    "returnJump": 47.93149155850755,
+  },
+  "B0": {
+    "announcements": [
+      {
+        "distanceError": -825.6488888888889,
+        "lead": 400,
+        "timeError": -87.05000000000001,
+      },
+      {
+        "distanceError": -1006.528888888889,
+        "lead": 100,
+        "timeError": -87.59,
+      },
+    ],
+    "coverage": 0.03339547270306258,
+    "exitError": 1786.5434388213857,
+    "maxTunnelError": 1786.5434388213857,
+    "recoveryTime": 18.00999999999999,
+    "returnJump": 1802.5285944263408,
+  },
+}
+`;
+
+exports[`scenario stop-and-go > seed 1000001 gives unchanged metrics 1`] = `
+{
+  "A1": {
+    "announcements": [
+      {
+        "distanceError": -587.1435888888891,
+        "lead": 400,
+        "timeError": -56.47,
+      },
+      {
+        "distanceError": -873.9188888888893,
+        "lead": 100,
+        "timeError": -52.31999999999999,
+      },
+    ],
+    "coverage": 1,
+    "exitError": 2740.298184864724,
+    "maxTunnelError": 2740.298184864724,
+    "recoveryTime": 27.00999999999999,
+    "returnJump": 3226.943273703115,
+  },
+  "A2": {
+    "announcements": [
+      {
+        "distanceError": 30.499999999999545,
+        "lead": 400,
+        "timeError": 1.5599999999999739,
+      },
+      {
+        "distanceError": 34.80555555555566,
+        "lead": 100,
+        "timeError": 1.7800000000000296,
+      },
+    ],
+    "coverage": 0.560266311584554,
+    "exitError": 42.41390289577225,
+    "maxTunnelError": 42.41390289577225,
+    "recoveryTime": 8.009999999999991,
+    "returnJump": 53.03419410693283,
+  },
+  "B0": {
+    "announcements": [
+      {
+        "distanceError": -820.6888888888889,
+        "lead": 400,
+        "timeError": -86.43,
+      },
+      {
+        "distanceError": -1000.4488888888891,
+        "lead": 100,
+        "timeError": -86.82999999999998,
+      },
+    ],
+    "coverage": 0.04958721704394141,
+    "exitError": 1748.6717384635863,
+    "maxTunnelError": 1748.6717384635863,
+    "recoveryTime": 27.00999999999999,
+    "returnJump": 1722.025776962604,
+  },
+}
+`;

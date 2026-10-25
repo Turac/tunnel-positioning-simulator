@@ -93,6 +93,15 @@ describe('error terms', () => {
     expect(e[0]).not.toBe(0)
   })
 
+  it('a fixed turn-on bias replaces the drawn one and leaves the other terms unchanged', () => {
+    const drawn = errors(cruise, { ...DEFAULT_ACCELEROMETER }, 7)
+    const fixed = errors(cruise, { ...DEFAULT_ACCELEROMETER, turnOnBiasFixed: 0.05 }, 7)
+    const offset = fixed[0]! - drawn[0]!
+    expect(offset).not.toBe(0)
+    fixed.forEach((x, k) => expect(x - drawn[k]!).toBeCloseTo(offset, 12))
+    expect(new Set(errors(cruise, { ...OFF, turnOnBiasFixed: 0.05 }, 7))).toEqual(new Set([0.05]))
+  })
+
   it('bias drift variance at t = 10 s is q·t at 50, 100 and 200 Hz', () => {
     const q = 1e-4
     const fast = trajectory([{ t: 0, v: 50 }, { t: 100, v: 50 }]) // runEnd 26 s keeps this quick

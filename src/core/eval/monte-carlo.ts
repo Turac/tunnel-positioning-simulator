@@ -73,21 +73,39 @@ export function percentile(values: readonly number[], p: number): number {
   return sorted[lo]! + (sorted[hi]! - sorted[lo]!) * (h - lo)
 }
 
-const COLUMNS: readonly { title: string; value: (m: RunMetrics) => number | null; digits: number }[] = [
+interface Column {
+  readonly title: string
+  readonly value: (m: RunMetrics) => number | null
+  readonly digits: number
+  /** Two summary statistics shown as "a / b"; median and P95 unless given. */
+  readonly summary?: (xs: readonly number[]) => [number, number]
+}
+
+const mean = (xs: readonly number[]): number => xs.reduce((a, b) => a + b, 0) / xs.length
+
+const COLUMNS: readonly Column[] = [
   { title: 'Exit error (m)', value: (m) => m.exitError, digits: 1 },
   { title: 'Max tunnel error (m)', value: (m) => m.maxTunnelError, digits: 1 },
   { title: 'Ann. 400 m (m)', value: (m) => m.announcements[0]!.distanceError, digits: 1 },
   { title: 'Ann. 400 m (s)', value: (m) => m.announcements[0]!.timeError, digits: 2 },
   { title: 'Ann. 100 m (m)', value: (m) => m.announcements[1]!.distanceError, digits: 1 },
   { title: 'Ann. 100 m (s)', value: (m) => m.announcements[1]!.timeError, digits: 2 },
-  { title: '±2σ coverage', value: (m) => m.coverage, digits: 2 },
+  // Mean, the tuning target (ADR-0017), and P10, the worst runs: the median and P95 of a
+  // fraction bounded by 1 are usually both 1.00 and hide over-confident runs (ADR-0018).
+  {
+    title: '±2σ coverage (mean / P10)',
+    value: (m) => m.coverage,
+    digits: 2,
+    summary: (xs) => [mean(xs), percentile(xs, 0.1)],
+  },
   { title: 'Return jump (m)', value: (m) => m.returnJump, digits: 1 },
   { title: 'Recovery (s)', value: (m) => m.recoveryTime, digits: 1 },
 ]
 
 /**
  * One table per scenario, one row per method. Cells are "median / P95" over the runs that
- * have a value; missed announcements and runs that never recover are counted separately.
+ * have a value, except coverage ("mean / P10"); missed announcements and runs that never
+ * recover are counted separately.
  */
 export function toMarkdown(rows: readonly ResultRow[]): string {
   const header = `| Method | ${COLUMNS.map((c) => c.title).join(' | ')} | Missed ann. | Not recovered |`
@@ -99,7 +117,8 @@ export function toMarkdown(rows: readonly ResultRow[]): string {
       const cells = COLUMNS.map((c) => {
         const xs = row.metrics.map(c.value).filter((x): x is number => x !== null)
         if (xs.length === 0) return '—'
-        return `${percentile(xs, 0.5).toFixed(c.digits)} / ${percentile(xs, 0.95).toFixed(c.digits)}`
+        const [a, b] = c.summary ? c.summary(xs) : [percentile(xs, 0.5), percentile(xs, 0.95)]
+        return `${a.toFixed(c.digits)} / ${b.toFixed(c.digits)}`
       })
       const missed = row.metrics.filter((m) => m.announcements.some((a) => a.timeError === null)).length
       const notRecovered = row.metrics.filter((m) => m.recoveryTime === null).length

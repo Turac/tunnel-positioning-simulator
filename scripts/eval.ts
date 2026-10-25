@@ -42,7 +42,7 @@ const report = [
   '',
   `Seeds ${seeds[0]}–${seeds[seeds.length - 1]} (${runs} runs per scenario). ` +
     `A2 tuning: q_extra = ${kalman.qExtra}, gnssRScale = ${kalman.gnssRScale}.`,
-  'Cells are median / P95. Announcement errors: negative = early, positive = late.',
+  'Cells are median / P95, except coverage (mean / P10). Announcement errors: negative = early, positive = late.',
   '',
   toMarkdown(rows),
 ].join('\n')

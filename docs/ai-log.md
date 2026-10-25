@@ -129,3 +129,17 @@ Format: date · tool · topic · AI proposal · decision · reason.
   guard only improves the error message. The guard was kept, because a clear
   "Unknown stream" message helps when a stream name is mistyped, and the test now checks
   the message, so the mutant is killed.
+
+### 2026-10-25 · Claude Code · Phase 1 plan review: map vs. truth separation
+
+- **AI proposal:** Claude Code's Phase 1 plan placed tunnel geometry, exit position and
+  grade profile in `src/core/world/`, which estimators are forbidden to import.
+- **Decision:** Introduce a neutral `src/core/map/` module that both `world/` and estimators
+  can import, and extend the lint rules and boundary tests accordingly.
+- **Reason:** Estimators legitimately need this map data (exit announcement, grade
+  correction, GNSS gating near the tunnel end). Placing it under `world/` would conflict
+  with the import restrictions that isolate ground truth.
+- **Process:** The project author does not approve plans directly but reviews them. The
+  author raised this concern, discussed it and the proposed separation with another AI
+  model, which agreed the approach was reasonable, and then asked Claude Code to make the
+  change.

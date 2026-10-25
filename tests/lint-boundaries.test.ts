@@ -112,6 +112,21 @@ describe('map neutrality', () => {
   })
 })
 
+describe('physics neutrality', () => {
+  it.each([
+    "export { x } from '../world/trajectory'",
+    "export { x } from '../sensors/accelerometer'",
+    "export { x } from '../sim/run'",
+  ])('rejects %j', async (code) => {
+    expect(await ruleIds(code, 'src/core/physics/fixture.ts')).toContain('no-restricted-imports')
+  })
+
+  it('may be imported by estimators', async () => {
+    const code = "export { STANDARD_GRAVITY } from '../physics/constants'"
+    expect(await ruleIds(code, ESTIMATOR)).toEqual([])
+  })
+})
+
 describe('sim may combine truth and sensors', () => {
   it('allows world, sensors and map', async () => {
     const code = [

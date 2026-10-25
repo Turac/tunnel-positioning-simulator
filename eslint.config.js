@@ -59,13 +59,13 @@ const measurementSiblingPatterns = [
   },
 ]
 
-// map/ is known map data, shared by world/ and estimators/, so it must not depend on
-// ground truth or on anything that produces it.
-const mapNeutralityPatterns = [
+// map/ (known map data) and physics/ (physical constants) are shared by the simulator and
+// estimators/, so they must not depend on ground truth or on anything that produces it.
+const neutralModulePatterns = [
   {
     regex: '(^|/)(world|sensors|sim|eval|scenarios)(/|$)',
     message:
-      'map/ is neutral map data imported by world/ and estimators/; it must not import ' +
+      'map/ and physics/ are imported by estimators/; they must not import ' +
       'world, sensors, sim, eval or scenarios (CLAUDE.md hard rule 1).',
   },
 ]
@@ -138,13 +138,13 @@ export default defineConfig(
     },
   },
   {
-    files: ['src/core/map/**/*.ts'],
+    files: ['src/core/map/**/*.ts', 'src/core/physics/**/*.ts'],
     rules: {
       'no-restricted-imports': [
         'error',
         {
           paths: coreImportPaths,
-          patterns: [...coreImportPatterns, ...mapNeutralityPatterns],
+          patterns: [...coreImportPatterns, ...neutralModulePatterns],
         },
       ],
     },

@@ -26,6 +26,7 @@ src/core/            Pure TypeScript. No DOM, no React, no Node APIs.
   eval/              Metrics and Monte Carlo runner. The only place truth meets estimates.
   scenarios/         Scenario loading and validation.
   random/            Seeded PRNG and Gaussian sampling.
+  physics/           Physical constants. Neutral like map/: imported by estimators/ too.
 src/ui/              React + SVG visualisation. Reads from core, never the other way.
 scripts/             Node CLI entry points (batch evaluation).
 scenarios/           Scenario definitions (JSON).

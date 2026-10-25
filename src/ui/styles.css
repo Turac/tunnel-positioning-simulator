@@ -1,0 +1,171 @@
+:root {
+  --bg: #fafafa;
+  --panel: #ffffff;
+  --text: #1a1a1a;
+  --muted: #666666;
+  --border: #dddddd;
+  --tunnel: #d6d6d6;
+  --road: #9a9a9a;
+  --outage: rgba(0, 0, 0, 0.06);
+  --error: #b00020;
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--bg);
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+}
+
+.app {
+  display: grid;
+  grid-template-columns: 270px 1fr;
+  min-height: 100vh;
+}
+
+.controls {
+  padding: 16px;
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.controls h1 {
+  font-size: 16px;
+  margin: 0;
+}
+
+.control label,
+.control .label {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.control .value {
+  font-weight: 400;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.control select,
+.control input[type='number'],
+.control input[type='range'] {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.estimators {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 4px 8px;
+  align-items: center;
+}
+
+.swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 4px;
+}
+
+button {
+  font: inherit;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: #f2f2f2;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #e8e8e8;
+}
+
+.main {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 12px;
+}
+
+.panel h2 {
+  font-size: 13px;
+  margin: 0 0 6px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.panel svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.time {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.time input[type='range'] {
+  flex: 1;
+}
+
+.readout {
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.error-banner {
+  color: var(--error);
+  border-color: var(--error);
+}
+
+svg text {
+  font-size: 10px;
+  fill: var(--muted);
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-variant-numeric: tabular-nums;
+}
+
+th,
+td {
+  text-align: right;
+  padding: 3px 6px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+th:first-child,
+td:first-child {
+  text-align: left;
+}

@@ -59,6 +59,6 @@ Changing a value requires updating this file in the same commit.
 
 | ID | Assumption | Value | Rationale | Status |
 |---|---|---|---|---|
-| A-40 | Exit announcements are made at fixed lead distances before the exit. | TBD (e.g. 400 m and 100 m) | Demo threshold chosen by us, not a product requirement. | draft (Phase 2) |
-| A-41 | Acceptance thresholds for errors are demo thresholds, labelled as our choice. | TBD | No product threshold is given in the task. | draft (Phase 2) |
+| A-40 | Exit announcements are made at fixed lead distances before the exit, triggered when the estimate reaches the announcement point. | 400 m and 100 m | **Our choice**, not a product requirement: one early notice and one final notice before the turn. See ADR-0012. | chosen |
+| A-41 | Recovery threshold after the tunnel: the estimate counts as recovered once its position error stays below this value to the end of the run. | 5 m | **Our choice**, a demo threshold: slightly above the open-sky GNSS 2σ (2 × 2.0 m, A-25), so a recovered estimate is about as good as GNSS. No product threshold is given in the task. See ADR-0012. | chosen |
 | A-42 | Results are reported over multiple seeds as median / P95 / max. | ≥ 50 seeds | Single runs hide variance. | chosen |

@@ -3,8 +3,9 @@ import type { Estimate, Estimator } from '../../src/core/estimators/estimator'
 import { createKalman, GATE } from '../../src/core/estimators/kalman'
 import { createTunnelMap } from '../../src/core/map/tunnel'
 
-// Flat road, car at a constant 20 m/s; the accelerometer reads only a constant bias of
-// 0.05 m/s² (no noise). GNSS fixes are exact unless an offset is given.
+// Flat road, car at a constant 20 m/s; the accelerometer reads a constant bias of
+// 0.05 m/s² plus the 25 Hz vibration at 20 m/s (RMS 0.8 m/s², A-32), so the ZUPT detector
+// sees a moving car. GNSS fixes are exact unless an offset is given.
 const map = createTunnelMap({
   approachLength: 3000,
   tunnelLength: 1000,
@@ -14,12 +15,13 @@ const map = createTunnelMap({
 })
 const BIAS = 0.05
 const R_SIGMA = 2
+const moving = (t: number): number => BIAS + Math.SQRT2 * 0.8 * Math.sin(2 * Math.PI * 25 * t + 0.3)
 
 function drive(a2: Estimator, from: number, to: number, offset: (t: number) => number = () => 0): Estimate {
   let last: Estimate | null = null
   for (let k = from * 100 + 1; k <= to * 100; k++) {
     const t = k / 100
-    last = a2.step({ kind: 'accel', t, f: BIAS })
+    last = a2.step({ kind: 'accel', t, f: moving(t) })
     if (k % 100 === 0) {
       a2.step({
         kind: 'gnss',
@@ -61,7 +63,7 @@ describe('A2 Kalman filter', () => {
     // Two rejected fixes at +60 m, then the third: just before it, the estimate is e.
     expect(drive(a2, 100, 102, () => 60).s).toBeCloseTo(-3000 + 20 * 102, 1) // rejected
     drive(a2, 102, 102.99)
-    const before = a2.step({ kind: 'accel', t: 103, f: BIAS })!
+    const before = a2.step({ kind: 'accel', t: 103, f: moving(103) })!
     const z = -3000 + 20 * 103 + 60
     const after = a2.step({ kind: 'gnss', t: 103, s: z, speed: 20, reportedSigma: R_SIGMA, reportedSpeedSigma: 0.5 })!
     const nu = z - before.s
@@ -76,5 +78,33 @@ describe('A2 Kalman filter', () => {
     // The counter restarted: a single far outlier right after is rejected.
     const next = drive(a2, 103, 104, () => 500)
     expect(next.s).toBeLessThan(after.s + 25)
+  })
+})
+
+describe('A2 zero-velocity update', () => {
+  // Vibration with RMS σ(v) = 0.2 + 0.03·v at 25 Hz, as in A-32, plus the bias. One fix
+  // at t = 0 with a speed error, then no GNSS (inside the tunnel) for 5 s.
+  function coast(v: number, fixSpeed: number): Estimate {
+    const a2 = createKalman(map)
+    a2.step({ kind: 'gnss', t: 0, s: 0, speed: fixSpeed, reportedSigma: 2, reportedSpeedSigma: 0.5 })
+    const amplitude = Math.SQRT2 * (0.2 + 0.03 * v)
+    let last: Estimate | null = null
+    for (let k = 1; k <= 500; k++) {
+      const t = k / 100
+      last = a2.step({ kind: 'accel', t, f: BIAS + amplitude * Math.sin(2 * Math.PI * 25 * t + 0.3) })
+    }
+    return last!
+  }
+
+  it('holds a standing car at zero speed', () => {
+    expect(Math.abs(coast(0, 0.5).v)).toBeLessThan(0.01)
+  })
+
+  it('does not fire at 20 m/s', () => {
+    expect(coast(20, 20).v).toBeGreaterThan(19)
+  })
+
+  it('fails on purpose for a car crawling at 0.5 m/s: it is taken as standing', () => {
+    expect(Math.abs(coast(0.5, 0.5).v)).toBeLessThan(0.05)
   })
 })

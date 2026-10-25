@@ -3,7 +3,8 @@
 //
 // Prediction at each accelerometer sample with â = f − g·sin θ(ŝ) − b. GNSS position and
 // speed are separate scalar updates with R from the reported accuracies, each behind a
-// χ² gate. Inside the tunnel there are no updates and the uncertainty grows.
+// χ² gate. Inside the tunnel there are no GNSS updates and the uncertainty grows; a
+// zero-velocity update (ZUPT) holds the speed at 0 while the car stands still (ADR-0014).
 
 import { gradeSlopeAt, pitchAt, type TunnelMap } from '../map/tunnel'
 import { STANDARD_GRAVITY } from '../physics/constants'
@@ -19,6 +20,18 @@ export const GATE = 6.63
 
 /** Consecutive rejected position fixes before P_ss is widened to accept the next (A-55). */
 export const REJECTIONS_BEFORE_WIDENING = 3
+
+/** ZUPT detector window, s (A-56). */
+export const ZUPT_WINDOW = 0.5
+
+/**
+ * ZUPT threshold on the standard deviation of f over the window, m/s² (A-56): the vibration
+ * RMS at 1 m/s from σ(v) = 0.2 + 0.03·v (A-32). Below about 1 m/s the car looks stationary.
+ */
+export const ZUPT_THRESHOLD = 0.2 + 0.03 * 1
+
+/** 1σ of the zero-velocity pseudo-measurement, m/s (A-56). */
+export const ZUPT_SIGMA = 0.05
 
 export interface KalmanConfig {
   /** Extra velocity random-walk intensity for unmodelled effects, (m/s²)²·s (A-53). */
@@ -38,6 +51,9 @@ export function createKalman(map: TunnelMap, config: KalmanConfig = DEFAULT_KALM
   let P: number[][] = []
   let t = 0
   let rejections = 0
+  // Recent accelerometer samples for the stationarity test, oldest first.
+  const window: { t: number; f: number }[] = []
+  let firstAccel: number | null = null
 
   function predict(f: number, dt: number): void {
     const xs = x!
@@ -68,13 +84,24 @@ export function createKalman(map: TunnelMap, config: KalmanConfig = DEFAULT_KALM
     P[B]![B]! += BIAS_RANDOM_WALK * dt
   }
 
+  /** True when the window spans ZUPT_WINDOW and the spread of f is below ZUPT_THRESHOLD. */
+  function stationary(m: { t: number; f: number }): boolean {
+    firstAccel ??= m.t
+    window.push(m)
+    while (window[0]!.t <= m.t - ZUPT_WINDOW) window.shift()
+    if (m.t - firstAccel < ZUPT_WINDOW) return false
+    const mean = window.reduce((sum, w) => sum + w.f, 0) / window.length
+    const variance = window.reduce((sum, w) => sum + (w.f - mean) ** 2, 0) / (window.length - 1)
+    return Math.sqrt(variance) < ZUPT_THRESHOLD
+  }
+
   /** Scalar update of state i; returns false if the gate rejects it. */
-  function update(i: number, z: number, R: number, widen: boolean): boolean {
+  function update(i: number, z: number, R: number, widen: boolean, gated = true): boolean {
     const xs = x!
     const nu = z - xs[i]!
     if (widen) P[i]![i] = Math.max(P[i]![i]!, (nu * nu) / GATE - R)
     const Sinn = P[i]![i]! + R
-    if ((nu * nu) / Sinn > GATE * (1 + 1e-12)) return false
+    if (gated && (nu * nu) / Sinn > GATE * (1 + 1e-12)) return false
     const K = P.map((row) => row[i]! / Sinn)
     for (let j = 0; j < 3; j++) xs[j] = xs[j]! + K[j]! * nu
     const Pi = [...P[i]!]
@@ -106,6 +133,11 @@ export function createKalman(map: TunnelMap, config: KalmanConfig = DEFAULT_KALM
       else if (x !== null) {
         predict(m.f, m.t - t)
         t = m.t
+      }
+      // The window keeps filling before the first fix, so a car that starts standing still
+      // is recognised at once.
+      if (m.kind === 'accel' && stationary(m) && x !== null) {
+        update(V, 0, ZUPT_SIGMA ** 2, false, false)
       }
       if (x === null) return null
       return { t: m.t, s: x[S]!, v: x[V]!, sigmaS: Math.sqrt(P[S]![S]!), bias: x[B]! }

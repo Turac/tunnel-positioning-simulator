@@ -95,9 +95,10 @@ describe('error terms', () => {
 
   it('bias drift variance at t = 10 s is q·t at 50, 100 and 200 Hz', () => {
     const q = 1e-4
+    const fast = trajectory([{ t: 0, v: 50 }, { t: 100, v: 50 }]) // runEnd 26 s keeps this quick
     for (const rateHz of [50, 100, 200]) {
       const at10 = Array.from({ length: 400 }, (_, seed) => {
-        const e = errors(cruise, { ...OFF, rateHz, biasDriftQ: q, vibrationFrequencyHz: 10 }, seed)
+        const e = errors(fast, { ...OFF, rateHz, biasDriftQ: q, vibrationFrequencyHz: 10 }, seed)
         return e[10 * rateHz]!
       })
       // 400 seeds: relative standard error of a variance ≈ √(2/400) ≈ 7 %.

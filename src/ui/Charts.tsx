@@ -81,6 +81,7 @@ export function AccelChart({ result, cursor, outage }: ChartProps) {
       yDomain={plot.domain}
       yLabel="m/s²"
       outage={outage}
+      exitTime={truth.exitTime}
       cursor={cursor}
     >
       {plot.node}
@@ -150,6 +151,7 @@ export function GnssCharts({ result, cursor, outage }: ChartProps) {
         yDomain={speed.domain}
         yLabel="km/h"
         outage={outage}
+        exitTime={truth.exitTime}
         cursor={cursor}
       >
         {speed.node}
@@ -162,6 +164,7 @@ export function GnssCharts({ result, cursor, outage }: ChartProps) {
         yDomain={position.domain}
         yLabel="m"
         outage={outage}
+        exitTime={truth.exitTime}
         cursor={cursor}
       >
         {position.node}
@@ -201,7 +204,7 @@ export function ErrorChart({ result, cursor, outage, shown, bandId }: ChartProps
             <g key={ev.lead}>
               <line x1={tx(ev.kTrue)} x2={tx(ev.kTrue)} y1={0} y2={H} stroke="var(--text)" strokeDasharray="3 3" strokeOpacity={0.6} />
               <text x={tx(ev.kTrue) + 3} y={20 + i * 12}>
-                {ev.lead} m point
+                {ev.lead} m before exit
               </text>
             </g>
           ))}
@@ -239,6 +242,7 @@ export function ErrorChart({ result, cursor, outage, shown, bandId }: ChartProps
       yDomain={plot.domain}
       yLabel="m"
       outage={outage}
+      exitTime={truth.exitTime}
       cursor={cursor}
     >
       {plot.node}

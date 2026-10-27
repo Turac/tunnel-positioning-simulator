@@ -19,40 +19,45 @@ export function RoadView({ result, k, shown, bandId }: Props) {
   const truth = result.truth.samples[k]!
   const tracks = result.tracks.filter((tr) => shown.has(tr.id))
 
-  const overview = linearScale([-map.approachLength, map.tunnelLength + map.departureLength], [PAD, W - PAD])
-  const zoom = linearScale([truth.s - ZOOM_HALF, truth.s + ZOOM_HALF], [PAD, W - PAD])
+  const roadStart = -map.approachLength
+  const roadEnd = map.tunnelLength + map.departureLength
+  const overview = linearScale([roadStart, roadEnd], [PAD, W - PAD])
+  // Centred on the car, but kept on the road near either end.
+  const centre = Math.min(Math.max(truth.s, roadStart + ZOOM_HALF), roadEnd - ZOOM_HALF)
+  const zoom = linearScale([centre - ZOOM_HALF, centre + ZOOM_HALF], [PAD, W - PAD])
 
-  const zoomH = 50 + tracks.length * 16
+  const rowsBottom = 30 + tracks.length * 16
+  const zoomH = rowsBottom + 32
   const recentFixes = result.gnss.filter(
-    (f) => f.t <= truth.t && Math.abs(f.s - truth.s) <= ZOOM_HALF,
+    (f) => f.t <= truth.t && Math.abs(f.s - centre) <= ZOOM_HALF,
   )
+  // Announcements made so far, drawn at the car's true position when each was made.
+  const announced = (draw: (s: number) => number, top: number) =>
+    tracks.flatMap((tr) =>
+      tr.announcements.map((a) =>
+        a.kEst !== null && a.kEst <= k ? (
+          <path key={`${tr.id}-${a.lead}`} d={triangle(draw(result.truth.samples[a.kEst]!.s), top)} fill={estimatorColor(tr.id)}>
+            <title>{`${tr.id} announced "${a.lead} m to exit" here (true position)`}</title>
+          </path>
+        ) : null,
+      ),
+    )
 
   return (
     <div className="panel">
       <h2>Road: whole route</h2>
       <svg viewBox={`0 0 ${W} 74`} role="img" aria-label="Whole road with the tunnel">
         <Features x={overview} result={result} y0={22} y1={48} labels />
-        {tracks.map((tr) => {
-          return tr.announcements.map((a) =>
-            a.kEst !== null && a.kEst <= k ? (
-              <path
-                key={`${tr.id}-${a.lead}`}
-                d={triangle(overview(result.truth.samples[a.kEst]!.s), 56)}
-                fill={estimatorColor(tr.id)}
-              >
-                <title>{`${tr.id} announced "${a.lead} m to exit" here (true position)`}</title>
-              </path>
-            ) : null,
-          )
-        })}
+        {announced(overview, 56)}
         {tracks.map((tr) => {
           const e = tr.estimates[k]
           return e ? <Marker key={tr.id} x={overview(e.s)} y={35} color={estimatorColor(tr.id)} /> : null
         })}
         <rect x={overview(truth.s) - 3} y={27} width={6} height={16} fill={TRUTH_COLOR} />
       </svg>
+      <Legend />
 
-      <h2 style={{ marginTop: 8 }}>Road: ±{ZOOM_HALF} m around the true car</h2>
+      <h2 style={{ marginTop: 8 }}>Road: {2 * ZOOM_HALF} m around the true car</h2>
       <svg viewBox={`0 0 ${W} ${zoomH}`} role="img" aria-label="Zoomed road around the car">
         <defs>
           <clipPath id="zoom-clip">
@@ -61,6 +66,8 @@ export function RoadView({ result, k, shown, bandId }: Props) {
         </defs>
         <g clipPath="url(#zoom-clip)">
           <Features x={zoom} result={result} y0={8} y1={zoomH - 18} labels />
+          <rect x={zoom(truth.s) - 3} y={12} width={6} height={rowsBottom - 12} fill={TRUTH_COLOR} />
+          {announced(zoom, rowsBottom + 4)}
           {recentFixes.map((f) => (
             <circle key={f.t} cx={zoom(f.s)} cy={20} r={3} fill={GNSS_COLOR}>
               <title>{`GNSS fix t = ${f.t} s`}</title>
@@ -87,7 +94,6 @@ export function RoadView({ result, k, shown, bandId }: Props) {
               </g>
             )
           })}
-          <line x1={zoom(truth.s)} x2={zoom(truth.s)} y1={10} y2={zoomH - 20} stroke={TRUTH_COLOR} strokeWidth={2} />
         </g>
         {ticks(zoom.domain, 8).map((s) => (
           <text key={s} x={zoom(s)} y={zoomH - 4} textAnchor="middle">
@@ -101,16 +107,22 @@ export function RoadView({ result, k, shown, bandId }: Props) {
           </text>
         ))}
       </svg>
+      <Legend />
 
       <div className="readout">
         <span>t = {truth.t.toFixed(1)} s</span>
         <span>true s = {truth.s.toFixed(1)} m</span>
         <span>v = {(truth.v * 3.6).toFixed(1)} km/h</span>
+        <span>error = estimate − true</span>
         {tracks.map((tr) => {
           const err = tr.errors[k]
+          const e = tr.estimates[k]
           return (
             <span key={tr.id} style={{ color: estimatorColor(tr.id) }}>
-              {tr.id}: {err === null || err === undefined ? '—' : `${err >= 0 ? '+' : ''}${err.toFixed(1)} m`}
+              {tr.id}:{' '}
+              {err === null || err === undefined || !e
+                ? '—'
+                : `${err >= 0 ? '+' : ''}${err.toFixed(1)} m (±${round2Sigma(2 * e.sigmaS)} m)`}
             </span>
           )
         })}
@@ -135,14 +147,15 @@ function Features({ x, result, y0, y1, labels }: { x: Scale; result: SingleRunRe
           exit
         </text>
       )}
-      {[400, 100].map((lead) => {
+      {[400, 100].map((lead, i) => {
         const ax = x(map.exitS - lead)
         return (
           <g key={lead}>
             <line x1={ax} x2={ax} y1={y0} y2={y1} stroke="var(--text)" strokeDasharray="3 3" />
+            {/* Staggered so the two labels do not overlap on a short tunnel. */}
             {labels && (
-              <text x={ax - 3} y={y0 + 11} textAnchor="end">
-                {lead} m
+              <text x={ax - 3} y={y0 + 11 + i * 11} textAnchor="end">
+                {lead} m before exit
               </text>
             )}
           </g>
@@ -152,7 +165,7 @@ function Features({ x, result, y0, y1, labels }: { x: Scale; result: SingleRunRe
   )
 }
 
-/** Estimate marker; drawn hollow at the edge when the estimate lies outside the strip. */
+/** Estimate marker (○); dashed at the edge when the estimate lies outside the strip. */
 function Marker({ x, y, color }: { x: number; y: number; color: string }) {
   const lo = PAD + 6
   const hi = W - PAD - 6
@@ -162,11 +175,21 @@ function Marker({ x, y, color }: { x: number; y: number; color: string }) {
       cx={Math.min(Math.max(x, lo), hi)}
       cy={y}
       r={5}
-      fill={outside ? 'none' : color}
+      fill="var(--panel)"
       stroke={color}
-      strokeWidth={outside ? 2 : 0}
+      strokeWidth={2.5}
+      strokeDasharray={outside ? '3 2' : undefined}
     />
   )
+}
+
+function Legend() {
+  return <p className="note">▮ true car · ○ estimate · ▲ true position when each method announced</p>
+}
+
+/** 2σ for the readout: whole metres from 10 m, one decimal below. */
+function round2Sigma(v: number): string {
+  return v >= 10 ? v.toFixed(0) : v.toFixed(1)
 }
 
 function triangle(cx: number, top: number): string {

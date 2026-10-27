@@ -1,10 +1,10 @@
 import { useMemo, useRef, useState } from 'react'
 import { ESTIMATORS } from '../core/estimators/list'
-import { SEED_SETS } from '../core/eval/monte-carlo'
 import { runSingle, type SingleRunResult } from '../core/eval/single-run'
 import { applyOverrides, type ScenarioOverrides } from '../core/scenarios/overrides'
 import { SCENARIOS } from '../core/scenarios/scenarios'
 import { Controls } from './Controls'
+import { defaultSeed } from './defaultSeeds'
 import { AccelChart, ErrorChart, GnssCharts } from './Charts'
 import { AnnouncementTable, MetricsPanel } from './MetricsPanel'
 import { RoadView } from './RoadView'
@@ -16,8 +16,8 @@ type Computed = { result: SingleRunResult; error: null } | { result: null; error
 
 export function App() {
   const [scenarioId, setScenarioId] = useState(SCENARIOS[0]!.id)
-  // First report seed: the demo shows report-set runs, not tuning seeds (A-43).
-  const [seed, setSeed] = useState(SEED_SETS.report.first)
+  // A representative report-set run, not a tuning seed (A-43).
+  const [seed, setSeed] = useState(() => defaultSeed(SCENARIOS[0]!.id))
   const [overrides, setOverrides] = useState<ScenarioOverrides>({})
   const [shown, setShown] = useState<ReadonlySet<string>>(() => new Set(ESTIMATOR_IDS))
   const [bandId, setBandId] = useState('A2')
@@ -54,6 +54,7 @@ export function App() {
         scenario={scenario}
         onScenario={(id) => {
           setScenarioId(id)
+          setSeed(defaultSeed(id))
           setOverrides({})
         }}
         seed={seed}
@@ -119,7 +120,9 @@ function RunView(p: {
         <ErrorChart result={p.result} cursor={t} outage={outage} shown={p.shown} bandId={p.bandId} />
         <AccelChart result={p.result} cursor={t} outage={outage} />
         <GnssCharts result={p.result} cursor={t} outage={outage} />
-        <p className="note">Shaded: GNSS outage, from the tunnel entry to the first fix after the exit.</p>
+        <p className="note">
+          Shaded: GNSS outage, from the tunnel entry to the first fix after the exit. Thick grey line: tunnel exit.
+        </p>
       </div>
       <MetricsPanel result={p.result} shown={p.shown} />
       <AnnouncementTable result={p.result} shown={p.shown} />

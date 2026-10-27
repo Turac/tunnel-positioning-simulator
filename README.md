@@ -88,6 +88,8 @@ and seconds), the ±2σ coverage and the behaviour when GNSS returns.
 markdown table to `out/eval-<set>.md` (ADR-0016, ADR-0018). Tuning and report seeds never
 overlap.
 
+The visual simulator opens each scenario on the report seed whose A2 exit error is closest to the report median (a representative run, not the best run).
+
 ## Repository layout
 
 See `CLAUDE.md` for the architecture and conventions.

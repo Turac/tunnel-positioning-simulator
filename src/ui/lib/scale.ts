@@ -20,7 +20,10 @@ export function ticks(domain: readonly [number, number], count = 6): number[] {
   if (!(span > 0)) return [lo]
   const raw = span / count
   const pow = 10 ** Math.floor(Math.log10(raw))
-  const step = [1, 2, 5, 10].map((m) => m * pow).find((s) => s >= raw)!
+  // Nearest round step on a log scale, not the next larger one: rounding up could give a
+  // step close to the whole span and leave a single tick.
+  const r = raw / pow
+  const step = (r >= Math.sqrt(50) ? 10 : r >= Math.sqrt(10) ? 5 : r >= Math.sqrt(2) ? 2 : 1) * pow
   const out: number[] = []
   for (let v = Math.ceil(lo / step) * step; v <= hi + step * 1e-9; v += step) out.push(Math.abs(v) < step * 1e-9 ? 0 : v)
   return out

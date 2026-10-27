@@ -175,3 +175,21 @@ Format: date · tool · topic · AI proposal · decision · reason.
 - Project author discussed with a separate AI chat (Claude) and accepted: ZUPT σ = 0.5 m/s (only what the detector actually knows), applied at most once per second, plus the 1 s hold.
 - Result (A2, seeds 1–3, before tuning): stop-and-go exit error 73.2 / 63.0 / 87.0 m, max error in tunnel 73.2 / 63.0 / 87.0 m, coverage 0.45 / 0.41 / 0.49 (before the fix: 0.08 / 0.01 / 0.17). Long (no stops, unchanged by the fix): exit error 128.0 / 103.8 / 203.3 m, max error 128.0 / 103.8 / 203.3 m, coverage 0.96 / 0.83 / 0.85.
 - Recorded in ADR-0015, superseding ADR-0014.
+
+### 2026-10-27 · Claude Code · Visual simulator review
+
+- Found by: the project author, while testing the visual simulator. Issues: the position
+  error chart did not rescale usefully when A1 was hidden; the GNSS position error chart had
+  no readable y-axis values; the default seed was arbitrary; the road strips had no legend;
+  the "400 m point" / "100 m point" labels were unclear; the tunnel exit time was not marked
+  on the charts; the zoom status line gave no sign convention or uncertainty; the zoom strip
+  showed road beyond the road end.
+- The project author discussed these issues with the AI and accepted its suggestions:
+  - Root cause of the first two (Claude Code): the y-range already used only the shown
+    methods, but the tick step was always rounded up (e.g. 20 → 50), which could leave a
+    single "0" tick. The step is now the nearest round value on a log scale.
+  - Default seed: per scenario, the report seed whose A2 exit error is closest to the
+    report median — a representative run, not the best one. `npm run eval` prints these
+    seeds; the UI keeps them in a small table.
+  - Estimates are drawn as rings (○) to match the legend; an estimate outside the zoom
+    strip is a dashed ring at the edge.

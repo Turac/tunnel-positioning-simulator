@@ -20,6 +20,8 @@ interface Props {
   yLabel: string
   /** GNSS outage [from, to], shaded. */
   outage: readonly [number, number]
+  /** Time the car leaves the tunnel, s; marked with a labelled line. */
+  exitTime: number
   cursor: number
   /** Plot content drawn with chartScales(); memoise it so the cursor does not redraw it. */
   children: ReactNode
@@ -55,7 +57,8 @@ export function TimeChart(p: Props) {
           height={p.height - TOP - BOTTOM}
           fill="var(--outage)"
         />
-        {ticks(p.yDomain, 4).map((v) => (
+        {/* Fewer ticks on short charts so the labels do not crowd. */}
+        {ticks(p.yDomain, p.height < 100 ? 3 : 4).map((v) => (
           <g key={v}>
             <line x1={LEFT} x2={CHART_W - RIGHT} y1={y(v)} y2={y(v)} stroke="var(--border)" strokeWidth={v === 0 ? 1.2 : 0.6} />
             <text x={LEFT - 4} y={y(v) + 3} textAnchor="end">
@@ -74,6 +77,10 @@ export function TimeChart(p: Props) {
         </text>
         <text x={CHART_W - RIGHT} y={p.height - 6} textAnchor="end">
           t (s)
+        </text>
+        <line x1={x(p.exitTime)} x2={x(p.exitTime)} y1={TOP} y2={p.height - BOTTOM} stroke="var(--road)" strokeWidth={2.5} />
+        <text x={x(p.exitTime) - 3} y={p.height - BOTTOM - 4} textAnchor="end" fill="var(--muted)">
+          tunnel exit
         </text>
         <g clipPath={`url(#clip-${p.id})`}>{p.children}</g>
         <line x1={x(p.cursor)} x2={x(p.cursor)} y1={TOP} y2={p.height - BOTTOM} stroke="var(--text)" strokeWidth={1} />

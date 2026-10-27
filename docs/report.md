@@ -12,7 +12,41 @@ to say where the car is, and announce an exit that lies inside the tunnel "in 40
 position and the grade profile. The question is how well each estimator tracks the
 position along the tunnel, how well it knows its own uncertainty, and where it fails.
 
-## 2. Setup
+## 2. Approach
+
+- **One dimension.** Each tunnel has a single lane and the route and map are known, so the
+  car's position is its distance `s` along the centerline (ADR-0002, A-01, A-10, A-11). The
+  question becomes "how far has the car travelled?", which means estimating speed well.
+- **A Kalman filter with a bias state.** The accelerometer's bias is unknown, and
+  integrating it turns it into a position error that grows with t²: 0.1 m/s² over 250 s is
+  about 3 km by ½·b·t². The bias can only be learned while GNSS is still available, so the
+  filter carries it as a state and estimates it on the approach (ADR-0013).
+- **Grade correction from the map.** On a 4 % slope gravity puts about 0.39 m/s² into the
+  forward axis, four times the typical turn-on bias. The map's grade profile removes it
+  (A-12, ADR-0013).
+- **Zero-velocity updates.** Integration alone cannot tell a stop from slow driving. When
+  the accelerometer is quiet, the filter is told the car is nearly still, which also makes
+  the bias observable during a stop (ADR-0014, ADR-0015).
+- **A gated GNSS return.** The first fixes after the exit can be tens of metres wrong while
+  the receiver reports them as good (A-37, A-38). Resetting to the first fix would copy that
+  error. Instead each fix is tested against the filter's own uncertainty. After three
+  rejected fixes in a row the filter widens its own uncertainty enough to accept the fix,
+  so it never ignores GNSS for good (ADR-0013, A-55).
+
+Considered but not built. The first three were in an early plan and were moved out of the
+core so that it stays small and well measured (ai-log, problem framing and scope); the
+barometer is a planned extension (E9):
+
+- **Particle filter:** for a three-state, one-dimensional problem whose only nonlinearity
+  is the grade, the extended Kalman filter's Jacobian covers it (ADR-0013).
+- **Map matching:** inside a single-lane tunnel there are no turns or junctions to match
+  against. Matching the grade profile is listed as extension E9.
+- **BLE beacons:** they need roadside infrastructure in every tunnel. Listed as extension
+  E7.
+- **Barometer:** could observe the grade, but adds a sensor model and its own errors.
+  Listed with grade-profile matching as extension E9.
+
+## 3. Setup
 
 - **Simulated sensors.** A 100 Hz accelerometer with white noise, turn-on bias, bias drift,
   speed-dependent vibration, gravity leakage on grades and optional mounting and scale
@@ -20,10 +54,11 @@ position along the tunnel, how well it knows its own uncertainty, and where it f
   tunnel, returning after a random delay with inflated error, and an optional position
   jump (ADR-0010, A-24 to A-39). The simulator models error sources that the estimators do
   not, on purpose.
-- **Scenarios** (A-44). baseline: 1 km flat, constant 70 km/h. long: 5 km flat.
-  stop-and-go: 2 km with a stop and a slow crawl. graded: 2 km at +4 % then −2 %.
-  poor-sensor: 2 km flat with a much worse accelerometer and a 30 m GNSS jump after the
-  exit.
+- **Scenarios** (A-44). baseline: 1 km flat, constant 70 km/h, exit at 600 m. long: 5 km
+  flat, exit at 4000 m. stop-and-go: 2 km flat with a stop and a slow crawl, exit at
+  1500 m. graded: 2 km at +4 % then −2 %, constant 70 km/h, exit at 1500 m. poor-sensor:
+  2 km flat, constant 70 km/h, exit at 1500 m, with a much worse accelerometer and a 30 m
+  GNSS jump after the exit.
 - **Estimators** (ADR-0011). They see only the map and the measurements.
   - **B0**: keeps the speed of the last GNSS fix.
   - **A1**: integrates the accelerometer with gravity removed using the map grade; no bias
@@ -31,8 +66,31 @@ position along the tunnel, how well it knows its own uncertainty, and where it f
   - **A2**: Kalman filter on position, speed and accelerometer bias, with grade
     compensation, gated GNSS updates and zero-velocity updates at stops (ADR-0013 to
     ADR-0015, tuning in ADR-0017).
+- **Visual simulator** (`npm run dev`, ADR-0019). It runs one scenario and seed through the
+  same code as the evaluation and shows the true car against each estimate with its ±2σ
+  band, the position error, the sensor data and the run's metrics, with live changes to
+  tunnel length, accelerometer bias and grade.
 
-## 3. Method
+## 4. Key assumptions
+
+The full list, with sources, is in [`ASSUMPTIONS.md`](ASSUMPTIONS.md). Sourced means a
+published value; our choice means no source was found; simplification means a deliberate
+idealisation.
+
+| Assumption | Value | Basis | ID |
+|---|---|---|---|
+| Map, grade profile and exit position are known | from the navigation map | simplification | A-10, A-12, A-14 |
+| Phone rigidly mounted, orientation calibrated before the tunnel | residual misalignment 0°, 2° in poor-sensor | simplification | A-20, A-21 |
+| Free-flow speed in the tunnel | 70 km/h | sourced (one tunnel's limit); driving at the limit is our choice | A-15 |
+| Accelerometer noise and turn-on bias | 160 µg/√Hz; bias σ 10 mg, one draw per run | sourced (Bosch BMI270 datasheet) | A-23 |
+| Accelerometer bias drift | random walk, about 0.005 m/s² after 300 s | sourced drift rate; the 2 K temperature change is our choice | A-31 |
+| GNSS error in open sky | σ 2.0 m, correlated over 60 s | σ sourced (GPS.gov, read as a 95 % radius); correlation time our choice | A-25, A-34 |
+| GNSS return after the exit | delay 1–20 s; extra error 20 m decaying over 10 s | delay bound sourced (UNECE limit); extra error our choice | A-36, A-37 |
+| Receiver-reported accuracy after the exit | understates the extra error by half | our choice | A-38 |
+| Stop-detection (ZUPT) threshold | 0.23 m/s², about 1 m/s | our choice, derived from the simulator's own vibration law | A-56 |
+| Exit announcement distances | 400 m and 100 m before the exit | our choice | A-40 |
+
+## 5. Method
 
 - **Seeds.** A2 was tuned on the tuning seeds (1, 2, …; poor-sensor excluded). Every
   number here comes from the disjoint report seeds 1 000 001 – 1 000 200: 200 runs per
@@ -45,7 +103,7 @@ position along the tunnel, how well it knows its own uncertainty, and where it f
 - **Summaries.** Cells are median / P95 over the runs. Coverage is mean / P10, because the
   median and P95 of a fraction bounded by 1 hide over-confident runs (ADR-0018).
 
-## 4. Results
+## 6. Results
 
 Exit error, 100 m announcement timing and ±2σ coverage. The full table, with the 400 m
 announcement, return jump and recovery, is in the results file.
@@ -68,7 +126,7 @@ announcement, return jump and recovery, is in the results file.
 | | A1 | 1989.9 / 4358.9 | -23.02 / 36.25 | 0.97 / 0.99 |
 | | A2 | 27.9 / 81.6 | 0.14 / 1.96 | 0.81 / 0.13 |
 
-## 5. Findings
+## 7. Findings
 
 1. **A2 has the lowest median and P95 exit error in every scenario.** In baseline it is
    4.6 / 12.3 m against 17.4 / 49.8 m for B0. Estimating the accelerometer bias while GNSS
@@ -101,11 +159,17 @@ Two sanity checks:
   GNSS, the error grows along the tunnel, so its largest value is usually reached at the
   exit portal. In individual runs the maximum can occur earlier. The median / P95 cells
   still coincide.
-- **B0 has identical in-tunnel results in graded and poor-sensor.** B0 does not use the
-  accelerometer. Both scenarios share the same tunnel, exit, speed profile and seeds. They
-  differ only in the return jump, where poor-sensor adds the GNSS exit jump.
+- **B0 has identical in-tunnel results in graded and poor-sensor.** The two scenarios share
+  the tunnel length (2 km), the exit (1500 m), the approach and departure, the constant
+  70 km/h speed profile, the GNSS model apart from the exit jump, and the report seeds.
+  They differ in the grade (+4 % then −2 % in graded, flat in poor-sensor) and in the
+  accelerometer and the GNSS exit jump (poor-sensor only). B0 uses only GNSS fixes: inside
+  the tunnel it keeps the speed of the last fix before the entry. It reads neither the
+  accelerometer nor the grade, and the GNSS errors come from their own random stream
+  (ADR-0006). The car's position over time is the same in both, so B0 sees the same
+  fixes. The results differ only after the exit, where poor-sensor adds the GNSS jump.
 
-## 6. Limitations
+## 8. Limitations
 
 - **Simulation only.** The error models come from datasheets, published measurements and
   stated assumptions (`ASSUMPTIONS.md`). Several values have no source and are marked as
@@ -118,11 +182,37 @@ Two sanity checks:
 - **Single sensor model.** The estimators' sensor model matches the simulator's defaults
   wherever both use the same source. poor-sensor is the only scenario that tests a large
   model mismatch.
+- **GNSS error treated as white.** The simulated GNSS error is correlated over 60 s, but the
+  filter treats each fix as independent. A tuned scale on the reported σ (gnssRScale = 2,
+  A-54, ADR-0017) compensates instead of a correlated-error model.
+- **One speed level.** Every scenario drives at the same free-flow speed of 70 km/h (A-15);
+  only stop-and-go adds slower segments. Other speed levels are not evaluated.
 - **Reproducibility.** Exact reproduction is guaranteed on V8 (Chrome, Node.js). Other
   JavaScript engines may differ in the last bit of a Gaussian sample (README,
   Reproducibility).
 
-## 7. Reproduce
+## 9. Next steps with real devices
+
+1. **Record real data.** Log raw accelerometer and GNSS on several phones and mounts
+   through real tunnels, and replace the values marked as our choice with measured ones,
+   first the GNSS correlation time and the error after the exit (A-34, A-37, A-38) and the
+   exit jump (A-39). Measure vibration on a phone mount too: A-32 is only an
+   order-of-magnitude source.
+2. **Calibrate stop detection** on real vibration data instead of the simulator's own law
+   (A-56).
+3. **Estimate the phone's orientation in the car** from the direction of gravity and the
+   forward acceleration, instead of assuming it is aligned (A-21). Handle the phone being
+   picked up during the drive (extension E6).
+4. **Measure GNSS at real tunnel exits:** the reacquisition delay and the first-fix error.
+   Model the time-correlated GNSS error in the filter instead of scaling R (A-54).
+5. **Check timestamps:** latency, jitter and irregular sample rates of real sensor streams
+   (extension E2).
+6. **Evaluate extra signals:** a barometer for the grade (E9), and vehicle speed from OBD
+   or CarPlay where it is available (A-29).
+7. **Port the core** to the production engine's language (for example C++). It has no
+   dependencies and is separate from the UI, so this is a translation (ADR-0001).
+
+## 10. Reproduce
 
 ```bash
 npm install
@@ -130,5 +220,8 @@ npm run eval        # report set, 200 runs per scenario → out/eval-report.md
 npm run dev         # visual simulator
 ```
 
-The visual simulator opens each scenario on its representative seed, listed in the header
-of the results file: the report seed whose A2 exit error is closest to the median.
+`npm run eval` writes `out/eval-report.md`, which is not committed;
+[`results/eval-report.md`](results/eval-report.md) is a committed copy of that file, and a
+fresh run on V8 reproduces it byte for byte. The visual simulator opens each scenario on
+its representative seed, listed in the header of the results file: the report seed whose
+A2 exit error is closest to the median.

@@ -73,6 +73,25 @@ export function percentile(values: readonly number[], p: number): number {
   return sorted[lo]! + (sorted[hi]! - sorted[lo]!) * (h - lo)
 }
 
+/**
+ * The seed whose exit error is closest to the median exit error of the row: a typical run,
+ * not the best one. `seeds` are the seeds the row was run on, in order; ties go to the
+ * lower seed.
+ */
+export function representativeSeed(row: ResultRow, seeds: readonly number[]): number {
+  if (row.metrics.length !== seeds.length || seeds.length === 0) {
+    throw new RangeError(`Expected one seed per run, got ${seeds.length} seeds for ${row.metrics.length} runs`)
+  }
+  const median = percentile(row.metrics.map((m) => m.exitError), 0.5)
+  let best = 0
+  row.metrics.forEach((m, i) => {
+    const d = Math.abs(m.exitError - median)
+    const dBest = Math.abs(row.metrics[best]!.exitError - median)
+    if (d < dBest || (d === dBest && seeds[i]! < seeds[best]!)) best = i
+  })
+  return seeds[best]!
+}
+
 export interface Column {
   readonly title: string
   readonly value: (m: RunMetrics) => number | null

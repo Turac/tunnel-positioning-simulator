@@ -8,7 +8,7 @@ import { mkdirSync, writeFileSync } from 'node:fs'
 import { parseArgs } from 'node:util'
 import { ESTIMATORS } from '../src/core/estimators/list'
 import { createKalman, DEFAULT_KALMAN, KALMAN } from '../src/core/estimators/kalman'
-import { runMonteCarlo, SEED_SETS, seedsOf, toMarkdown, type SeedSetName } from '../src/core/eval/monte-carlo'
+import { representativeSeed, runMonteCarlo, SEED_SETS, seedsOf, toMarkdown, type SeedSetName } from '../src/core/eval/monte-carlo'
 
 const { values } = parseArgs({
   options: {
@@ -37,12 +37,19 @@ const started = Date.now()
 const rows = runMonteCarlo(SEED_SETS[set].scenarios, estimators, seeds)
 const seconds = (Date.now() - started) / 1000
 
+// Default seeds of the visual simulator (src/ui/defaultSeeds.ts): a typical A2 run per scenario.
+const representative = rows
+  .filter((r) => r.method === KALMAN.id)
+  .map((r) => `${r.scenario} ${representativeSeed(r, seeds)}`)
+  .join(', ')
+
 const report = [
   `# Evaluation: ${set} set`,
   '',
   `Seeds ${seeds[0]}–${seeds[seeds.length - 1]} (${runs} runs per scenario). ` +
     `A2 tuning: q_extra = ${kalman.qExtra}, gnssRScale = ${kalman.gnssRScale}.`,
   'Cells are median / P95, except coverage (mean / P10). Announcement errors: negative = early, positive = late.',
+  `Representative seeds (A2 exit error closest to its median): ${representative}.`,
   '',
   toMarkdown(rows),
 ].join('\n')

@@ -16,8 +16,9 @@ It makes no claim about accuracy on real devices; see `docs/ASSUMPTIONS.md`.
 
 ## Demo
 
-[Screen recording of the visual simulator](docs/media/simulator-demo.mp4): the baseline
-tunnel, a stop-and-go run, a larger accelerometer bias and a longer tunnel.
+[Screen recording of the visual simulator](docs/media/simulator-demo.mp4) (MP4, 110 s,
+43 MB; downloads when opened): the baseline tunnel, a stop-and-go run, a larger
+accelerometer bias and a longer tunnel.
 
 ## Getting started
 

@@ -14,6 +14,11 @@ harness measures how each estimator performs, where it breaks, and why.
 
 It makes no claim about accuracy on real devices; see `docs/ASSUMPTIONS.md`.
 
+## Demo
+
+[Screen recording of the visual simulator](docs/media/simulator-demo.mp4): the baseline
+tunnel, a stop-and-go run, a larger accelerometer bias and a longer tunnel.
+
 ## Getting started
 
 ### Requirements

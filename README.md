@@ -26,7 +26,7 @@ It makes no claim about accuracy on real devices; see `docs/ASSUMPTIONS.md`.
 
 ```bash
 npm install
-npm run dev         # start the simulator (Vite dev server)
+npm run dev         # start the simulator; open the printed URL (Chrome recommended, see Reproducibility)
 npm run build       # type-check and build for production into dist/
 npm test            # run all tests once
 npm run test:watch  # run tests in watch mode

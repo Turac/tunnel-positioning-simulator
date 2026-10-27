@@ -149,6 +149,23 @@ export default defineConfig(
       ],
     },
   },
+  // The UI draws what eval/ gives it (runSingle, ADR-0019) and never assembles truth itself.
+  {
+    files: ['src/ui/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              regex: '(^|/)(world|sim)(/|$)',
+              message: 'src/ui gets truth, estimates and metrics from eval/ (runSingle), not from world/ or sim/.',
+            },
+          ],
+        },
+      ],
+    },
+  },
   // Must come after any src/core/sensors/** block, so that its options win.
   {
     files: ['src/core/sensors/measurement.ts'],

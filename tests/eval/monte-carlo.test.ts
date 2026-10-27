@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { CONSTANT_VELOCITY } from '../../src/core/estimators/constant-velocity'
-import { percentile, runMonteCarlo, SEED_SETS, seedsOf, toMarkdown } from '../../src/core/eval/monte-carlo'
+import { percentile, representativeSeed, runMonteCarlo, SEED_SETS, seedsOf, toMarkdown } from '../../src/core/eval/monte-carlo'
+import type { RunMetrics } from '../../src/core/eval/metrics'
 import { BASELINE } from '../../src/core/scenarios/scenarios'
 
 describe('Monte Carlo', () => {
@@ -25,5 +26,18 @@ describe('Monte Carlo', () => {
     const table = () => toMarkdown(runMonteCarlo([BASELINE], [CONSTANT_VELOCITY], [1, 2]))
     expect(table()).toBe(table())
     expect(table()).toContain('| B0 |')
+  })
+
+  it('picks the seed whose exit error is closest to the median, ties to the lower seed', () => {
+    const row = (errors: number[]) => ({
+      scenario: 's',
+      method: 'A2',
+      metrics: errors.map((exitError) => ({ exitError }) as RunMetrics),
+    })
+    // Median of 1, 9, 4, 30, 5 is 5.
+    expect(representativeSeed(row([1, 9, 4, 30, 5]), [10, 11, 12, 13, 14])).toBe(14)
+    // Median of 2, 6 is 4; both are 2 away, so the lower seed wins.
+    expect(representativeSeed(row([6, 2]), [20, 21])).toBe(20)
+    expect(() => representativeSeed(row([1]), [1, 2])).toThrow(RangeError)
   })
 })

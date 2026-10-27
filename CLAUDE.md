@@ -24,12 +24,11 @@ src/core/            Pure TypeScript. No DOM, no React, no Node APIs.
   sim/               Runs a scenario: truth plus the measurement stream for one seed.
   estimators/        Position estimators. Consume measurements and the map ONLY.
   eval/              Metrics and Monte Carlo runner. The only place truth meets estimates.
-  scenarios/         Scenario loading and validation.
+  scenarios/         Scenario definitions (TypeScript objects), validation, UI overrides.
   random/            Seeded PRNG and Gaussian sampling.
   physics/           Physical constants. Neutral like map/: imported by estimators/ too.
 src/ui/              React + SVG visualisation. Reads from core, never the other way.
 scripts/             Node CLI entry points (batch evaluation).
-scenarios/           Scenario definitions (JSON).
 tests/               Vitest unit and scenario regression tests.
 docs/                Assumptions, decisions (ADRs), AI log, report.
 ```
@@ -175,7 +174,7 @@ not use.
 | A sensor | Add a new `Measurement` variant; the sensor draws from its own named PRNG stream. |
 | An estimator | Implement the common estimator interface and add it to the estimator list used by the evaluator. |
 | A sensor error term | Add it as a separate component, off by default, so existing scenarios are unchanged. |
-| A scenario | Add a new JSON file under `scenarios/`. |
+| A scenario | Add a `Scenario` object to `src/core/scenarios/scenarios.ts` and to `SCENARIOS` (steps in README). |
 | A metric | Add a new function and a new column in the results table. |
 
 **Invariant:** adding an extension must not change the results of existing scenarios and

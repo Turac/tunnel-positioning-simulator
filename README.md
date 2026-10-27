@@ -3,8 +3,8 @@
 Simulator and evaluation harness for estimating a car's position while GNSS is unavailable
 inside a road tunnel.
 
-> Status: work in progress. Simulation (Phase 1) and estimation with its evaluation
-> (Phase 2) are complete; the visual simulator and the report follow in Phase 3.
+> Status: the core is complete: simulation, estimators, evaluation, visual simulator and
+> report. Optional extensions are listed in `CLAUDE.md`.
 
 ## What this is
 
@@ -26,7 +26,7 @@ It makes no claim about accuracy on real devices; see `docs/ASSUMPTIONS.md`.
 
 ```bash
 npm install
-npm run dev         # start the simulator (Vite dev server)
+npm run dev         # start the simulator; open the printed URL (Chrome recommended, see Reproducibility)
 npm run build       # type-check and build for production into dist/
 npm test            # run all tests once
 npm run test:watch  # run tests in watch mode
@@ -88,13 +88,62 @@ and seconds), the ±2σ coverage and the behaviour when GNSS returns.
 markdown table to `out/eval-<set>.md` (ADR-0016, ADR-0018). Tuning and report seeds never
 overlap.
 
+Results and findings are in [`docs/report.md`](docs/report.md); the full results table is
+[`docs/results/eval-report.md`](docs/results/eval-report.md).
+
+## Visual simulator
+
+`npm run dev` opens a single page that runs one scenario on one seed with the same code
+the evaluation uses (`runSingle`, ADR-0019), so its numbers match a row of the report.
+
+- **Sidebar.** Scenario and seed; which estimators are shown and whose ±2σ band is drawn;
+  what-if overrides for tunnel length, accelerometer bias and tunnel grade (A-45), with a
+  reset to the scenario's own values.
+- **Playback bar.** Play/pause at ×1, ×10 or ×30, and a time slider. Keyboard: Space plays
+  or pauses, ←/→ step 1 s. The bar stays at the top while the page scrolls.
+- **Road.** The whole route, and a 400 m close-up around the true car with one row per
+  estimator, GNSS fixes, the exit announcement points and the current errors.
+- **Results.** Position error over time (estimate − true) with the selected ±2σ band, the
+  run's metrics with the report's columns, and each exit announcement against where the
+  car really was.
+- **Sensor inputs.** The accelerometer's specific force, and GNSS speed and position error,
+  on the same time axis. This section can be collapsed.
+
+In every chart the shaded span is the GNSS outage and the thick grey line is the tunnel
+exit. Each scenario opens on the report seed whose A2 exit error is closest to the report
+median, so the run is a representative one, not the best one. The table is in
+`src/ui/defaultSeeds.ts`.
+
+## Adding a scenario
+
+Scenarios are TypeScript objects, not data files, so the compiler checks them.
+
+1. Add a `Scenario` (`id`, `description`, `config`) to `src/core/scenarios/scenarios.ts`,
+   using the `road()` and `cruise()` helpers there, and append it to `SCENARIOS`.
+2. Record its values and the reason for them under A-44 in `docs/ASSUMPTIONS.md`, in the
+   same commit (CLAUDE.md rule 5).
+3. `npm test` checks it with `validateScenario` (tunnel 500 m – 5 km, |grade| ≤ 5 %, exit
+   inside the tunnel, speed profile reaching the road end) and records a regression
+   snapshot for it. Existing snapshots must not change.
+4. `npm run eval` adds it to the results and prints its representative seed. Add that
+   seed to `src/ui/defaultSeeds.ts`; otherwise the simulator opens on the first report
+   seed.
+5. The simulator and the evaluation pick it up from `SCENARIOS` automatically. A scenario
+   that tests errors the filter does not model should be left out of the tuning set
+   (`src/core/eval/monte-carlo.ts`, A-53), as poor-sensor is.
+
 ## Repository layout
 
 See `CLAUDE.md` for the architecture and conventions.
 
 ## Documentation
 
+- [`docs/report.md`](docs/report.md) — evaluation report: setup, results, findings,
+  limitations
+- [`docs/results/eval-report.md`](docs/results/eval-report.md) — full results table from
+  `npm run eval`
 - `docs/ASSUMPTIONS.md` — every modelling assumption, with IDs
 - `docs/decisions/` — architecture decision records
-- `docs/ai-log.md` — how AI tools were used and where they were corrected
+- [`docs/ai-usage.md`](docs/ai-usage.md) — AI usage note
+- `docs/ai-log.md` — dated record of how AI tools were used and where they were corrected
 - `tests/reference/README.md` — sources and rebuild steps for the PRNG test vectors

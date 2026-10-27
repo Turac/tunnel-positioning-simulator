@@ -28,6 +28,11 @@ export interface AccelerometerConfig {
   readonly scaleFactorError: number
   /** Residual pitch misalignment of the phone relative to the car δ, rad (A-21). */
   readonly pitchMisalignment: number
+  /**
+   * Optional fixed turn-on bias, m/s². When set it replaces the drawn b0; the draw still
+   * happens on its own stream, so no other term shifts. Off (undefined) by default (A-45).
+   */
+  readonly turnOnBiasFixed?: number
 }
 
 /** Default phone accelerometer (A-22, A-23, A-30..A-33). Mounting and scale errors off. */
@@ -69,9 +74,14 @@ export function simulateAccelerometer(
     )
   }
 
+  if (config.turnOnBiasFixed !== undefined && !Number.isFinite(config.turnOnBiasFixed)) {
+    throw new RangeError(`Fixed turn-on bias must be finite, got ${config.turnOnBiasFixed}`)
+  }
+
   const whiteRng = createStreamRng(seed, 'accelerometer')
   const driftRng = createStreamRng(seed, 'accelBiasDrift')
-  const turnOnBias = createStreamRng(seed, 'accelBiasInitial').gaussian(0, config.turnOnBiasSigma)
+  const drawnBias = createStreamRng(seed, 'accelBiasInitial').gaussian(0, config.turnOnBiasSigma)
+  const turnOnBias = config.turnOnBiasFixed ?? drawnBias
   const phase = 2 * Math.PI * createStreamRng(seed, 'accelVibration').uniform()
 
   const whiteSigma = config.noiseDensity * Math.sqrt(rateHz / 2)

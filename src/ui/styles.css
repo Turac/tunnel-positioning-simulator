@@ -1,0 +1,424 @@
+:root {
+  --bg: #fafafa;
+  --panel: #ffffff;
+  --text: #1a1a1a;
+  --muted: #666666;
+  --border: #dddddd;
+  --tunnel: #d6d6d6;
+  --road: #9a9a9a;
+  --outage: rgba(0, 0, 0, 0.06);
+  --error: #b00020;
+  /* Card groups: subtle edge and header tints, kept away from the estimator colours. */
+  --edge-road: #b9c6d3;
+  --tint-road: #f3f6f9;
+  --edge-result: #c9c3dc;
+  --tint-result: #f6f5fa;
+  --edge-sensor: #bcd5c6;
+  --tint-sensor: #f3f8f5;
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--bg);
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+}
+
+.app {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+/* On wide screens the controls stay in view while the run scrolls. */
+.controls {
+  padding: 16px;
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+
+.controls h1 {
+  font-size: 17px;
+  margin: 0;
+}
+
+.brand p {
+  margin: 2px 0 0;
+  font-size: 12px;
+}
+
+.controls h3.section {
+  margin: 6px 0 -6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+}
+
+.control label,
+.control .label {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.control .value {
+  font-weight: 400;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.control select,
+.control input[type='number'],
+.control input[type='range'] {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.estimators {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 4px 8px;
+  align-items: center;
+}
+
+/* One row per estimator: checkbox, colour, ID and plain name, left-aligned. */
+.control label.estimator {
+  justify-content: flex-start;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-weight: 400;
+}
+
+.swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex: none;
+}
+
+button {
+  font: inherit;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: #f2f2f2;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #e8e8e8;
+}
+
+.main {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+  /* Very wide screens: keep charts at a readable aspect instead of stretching. */
+  max-width: 1600px;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  min-width: 0;
+}
+
+/* The playback bar stays at the top while the cards scroll under it. */
+.time {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.time-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+  align-items: center;
+}
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--edge);
+  border-radius: 8px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.card-road {
+  --edge: var(--edge-road);
+  --tint: var(--tint-road);
+}
+
+.card-result {
+  --edge: var(--edge-result);
+  --tint: var(--tint-result);
+}
+
+.card-sensor {
+  --edge: var(--edge-sensor);
+  --tint: var(--tint-sensor);
+}
+
+.card-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 4px 16px;
+  padding: 8px 14px;
+  background: var(--tint);
+  border-bottom: 1px solid var(--border);
+}
+
+.card-head h2 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 650;
+  color: var(--text);
+}
+
+.card-head .legend {
+  padding-top: 2px;
+}
+
+.card-subtitle {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.card-body {
+  padding: 10px 14px 12px;
+}
+
+/* SVGs are drawn at the measured pixel width (useWidth), so they are not scaled here. */
+.card svg {
+  display: block;
+  overflow: visible;
+}
+
+.chart + .chart {
+  margin-top: 10px;
+}
+
+.chart-head h3 {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+/* Sits right under the playback bar; the main gap would push it too far away. */
+.page-note {
+  margin: -8px 2px 0;
+}
+
+.sensors {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.sensors summary {
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 4px 0;
+}
+
+.sensors[open] summary {
+  margin-bottom: 14px;
+}
+
+.time .play {
+  width: 70px;
+}
+
+.time input[type='range'] {
+  flex: 1 1 200px;
+  min-width: 0;
+}
+
+.time .clock {
+  min-width: 9ch;
+  text-align: right;
+}
+
+.readout {
+  margin-top: 8px;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.error-banner {
+  color: var(--error);
+  border-color: var(--error);
+}
+
+svg text {
+  font-size: 11px;
+  fill: var(--muted);
+}
+
+/* Wide tables scroll sideways inside their panel instead of widening the page. */
+.table-wrap {
+  overflow-x: auto;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-variant-numeric: tabular-nums;
+}
+
+th,
+td {
+  text-align: right;
+  padding: 3px 6px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+th:first-child,
+td:first-child {
+  text-align: left;
+}
+
+.chart-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 2px 12px;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.legend-item {
+  display: inline-flex;
+  white-space: nowrap;
+  align-items: center;
+  gap: 4px;
+}
+
+.note,
+.hint {
+  color: var(--muted);
+  font-size: 12px;
+  margin: 4px 0 0;
+}
+
+.hint {
+  margin: 0;
+  white-space: nowrap;
+}
+
+/* Keyboard hints are no use on touch screens. */
+@media (pointer: coarse) {
+  .hint {
+    display: none;
+  }
+}
+
+/* Narrow screens: controls above the run, laid out in as many columns as fit. */
+@media (max-width: 900px) {
+  .app {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .controls {
+    position: static;
+    height: auto;
+    overflow: visible;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px 20px;
+  }
+
+  .controls .brand,
+  .controls h3.section,
+  .controls > button {
+    grid-column: 1 / -1;
+  }
+
+  .controls > button {
+    justify-self: start;
+  }
+
+  .main {
+    padding: 10px;
+    gap: 10px;
+  }
+
+  .hint {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .controls {
+    padding: 12px;
+  }
+
+  .main {
+    padding: 8px;
+  }
+
+  .panel {
+    padding: 8px;
+  }
+
+  .card-head,
+  .card-body {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .time .clock {
+    flex: 1;
+  }
+}

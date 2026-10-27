@@ -1,9 +1,11 @@
 import type { SingleRunResult } from '../core/eval/single-run'
 import { linearScale, ticks, type Scale } from './lib/scale'
 import { estimatorColor, GNSS_COLOR, TRUTH_COLOR } from './theme'
+import { useWidth } from './useWidth'
 
-const W = 1000
 const PAD = 20
+/** Below this drawing width the announcement labels use the short form, px. */
+const COMPACT_W = 600
 /** Half-width of the zoom strip around the true car, m. */
 const ZOOM_HALF = 200
 
@@ -15,6 +17,8 @@ interface Props {
 }
 
 export function RoadView({ result, k, shown, bandId }: Props) {
+  const [ref, W] = useWidth<HTMLDivElement>()
+  const compact = W < COMPACT_W
   const { map } = result
   const truth = result.truth.samples[k]!
   const tracks = result.tracks.filter((tr) => shown.has(tr.id))
@@ -44,28 +48,28 @@ export function RoadView({ result, k, shown, bandId }: Props) {
     )
 
   return (
-    <div className="panel">
+    <div className="panel" ref={ref}>
       <h2>Road: whole route</h2>
-      <svg viewBox={`0 0 ${W} 74`} role="img" aria-label="Whole road with the tunnel">
-        <Features x={overview} result={result} y0={22} y1={48} labels />
+      <svg width={W} height={74} viewBox={`0 0 ${W} 74`} role="img" aria-label="Whole road with the tunnel">
+        <Features x={overview} result={result} y0={22} y1={48} labels compact={compact} />
         {announced(overview, 56)}
         {tracks.map((tr) => {
           const e = tr.estimates[k]
-          return e ? <Marker key={tr.id} x={overview(e.s)} y={35} color={estimatorColor(tr.id)} /> : null
+          return e ? <Marker key={tr.id} x={overview(e.s)} y={35} color={estimatorColor(tr.id)} width={W} /> : null
         })}
         <rect x={overview(truth.s) - 3} y={27} width={6} height={16} fill={TRUTH_COLOR} />
       </svg>
       <Legend />
 
       <h2 style={{ marginTop: 8 }}>Road: {2 * ZOOM_HALF} m around the true car</h2>
-      <svg viewBox={`0 0 ${W} ${zoomH}`} role="img" aria-label="Zoomed road around the car">
+      <svg width={W} height={zoomH} viewBox={`0 0 ${W} ${zoomH}`} role="img" aria-label="Zoomed road around the car">
         <defs>
           <clipPath id="zoom-clip">
             <rect x={PAD} y={0} width={W - 2 * PAD} height={zoomH} />
           </clipPath>
         </defs>
         <g clipPath="url(#zoom-clip)">
-          <Features x={zoom} result={result} y0={8} y1={zoomH - 18} labels />
+          <Features x={zoom} result={result} y0={8} y1={zoomH - 18} labels compact={compact} />
           <rect x={zoom(truth.s) - 3} y={12} width={6} height={rowsBottom - 12} fill={TRUTH_COLOR} />
           {announced(zoom, rowsBottom + 4)}
           {recentFixes.map((f) => (
@@ -90,12 +94,13 @@ export function RoadView({ result, k, shown, bandId }: Props) {
                     opacity={0.2}
                   />
                 )}
-                <Marker x={zoom(e.s)} y={y} color={color} />
+                <Marker x={zoom(e.s)} y={y} color={color} width={W} />
               </g>
             )
           })}
         </g>
-        {ticks(zoom.domain, 8).map((s) => (
+        {/* About one distance label per 90 px. */}
+        {ticks(zoom.domain, Math.max(3, Math.min(8, Math.floor(W / 90)))).map((s) => (
           <text key={s} x={zoom(s)} y={zoomH - 4} textAnchor="middle">
             {Math.round(s)}
           </text>
@@ -132,7 +137,8 @@ export function RoadView({ result, k, shown, bandId }: Props) {
 }
 
 /** Approach, shaded tunnel, departure, exit branch and announcement points. */
-function Features({ x, result, y0, y1, labels }: { x: Scale; result: SingleRunResult; y0: number; y1: number; labels?: boolean }) {
+function Features(p: { x: Scale; result: SingleRunResult; y0: number; y1: number; labels?: boolean; compact?: boolean }) {
+  const { x, result, y0, y1, labels, compact } = p
   const { map } = result
   const mid = (y0 + y1) / 2
   const exitX = x(map.exitS)
@@ -155,7 +161,7 @@ function Features({ x, result, y0, y1, labels }: { x: Scale; result: SingleRunRe
             {/* Staggered so the two labels do not overlap on a short tunnel. */}
             {labels && (
               <text x={ax - 3} y={y0 + 11 + i * 11} textAnchor="end">
-                {lead} m before exit
+                {compact ? `${lead} m` : `${lead} m before exit`}
               </text>
             )}
           </g>
@@ -166,9 +172,9 @@ function Features({ x, result, y0, y1, labels }: { x: Scale; result: SingleRunRe
 }
 
 /** Estimate marker (○); dashed at the edge when the estimate lies outside the strip. */
-function Marker({ x, y, color }: { x: number; y: number; color: string }) {
+function Marker({ x, y, color, width }: { x: number; y: number; color: string; width: number }) {
   const lo = PAD + 6
-  const hi = W - PAD - 6
+  const hi = width - PAD - 6
   const outside = x < lo || x > hi
   return (
     <circle

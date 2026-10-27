@@ -9,6 +9,7 @@ import { AccelChart, ErrorChart, GnssCharts } from './Charts'
 import { AnnouncementTable, MetricsPanel } from './MetricsPanel'
 import { RoadView } from './RoadView'
 import { usePlayback } from './usePlayback'
+import { useWidth } from './useWidth'
 
 const ESTIMATOR_IDS = ESTIMATORS.map((e) => e.id)
 
@@ -86,12 +87,13 @@ function RunView(p: {
   const t = Math.min(Math.max(p.time, 0), truth.runEnd)
   const k = Math.min(truth.samples.length - 1, Math.round(t * truth.rateHz))
   const playback = usePlayback(t, p.onTime, truth.runEnd)
+  const [chartsRef, chartW] = useWidth<HTMLDivElement>()
   // GNSS is out from the entry until the first fix after the exit.
   const outage: [number, number] = [truth.entryTime, p.result.reacquisitionTime ?? truth.runEnd]
   return (
     <>
       <div className="panel time">
-        <button onClick={playback.toggle} aria-label={playback.playing ? 'Pause' : 'Play'} style={{ width: 70 }}>
+        <button className="play" onClick={playback.toggle} aria-label={playback.playing ? 'Pause' : 'Play'}>
           {playback.playing ? 'Pause' : 'Play'}
         </button>
         <select aria-label="Playback speed" value={playback.speed} onChange={(e) => playback.setSpeed(Number(e.target.value))}>
@@ -110,16 +112,16 @@ function RunView(p: {
           value={t}
           onChange={(e) => p.onTime(Number(e.target.value))}
         />
-        <span className="value">
+        <span className="value clock">
           {t.toFixed(1)} / {truth.runEnd.toFixed(0)} s
         </span>
         <span className="hint">Space: play · ←/→: 1 s</span>
       </div>
       <RoadView result={p.result} k={k} shown={p.shown} bandId={p.bandId} />
-      <div className="panel charts">
-        <ErrorChart result={p.result} cursor={t} outage={outage} shown={p.shown} bandId={p.bandId} />
-        <AccelChart result={p.result} cursor={t} outage={outage} />
-        <GnssCharts result={p.result} cursor={t} outage={outage} />
+      <div className="panel charts" ref={chartsRef}>
+        <ErrorChart result={p.result} cursor={t} outage={outage} width={chartW} shown={p.shown} bandId={p.bandId} />
+        <AccelChart result={p.result} cursor={t} outage={outage} width={chartW} />
+        <GnssCharts result={p.result} cursor={t} outage={outage} width={chartW} />
         <p className="note">
           Shaded: GNSS outage, from the tunnel entry to the first fix after the exit. Thick grey line: tunnel exit.
         </p>

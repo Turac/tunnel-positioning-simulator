@@ -1,13 +1,14 @@
 import type { ReactNode } from 'react'
 import { linearScale, ticks, type Scale } from './lib/scale'
 
-export const CHART_W = 1000
 const LEFT = 52
 const RIGHT = 12
 const TOP = 8
 const BOTTOM = 20
 /** Buckets for decimation: about one per horizontal pixel of the plot area. */
-export const CHART_BUCKETS = CHART_W - LEFT - RIGHT
+export function chartBuckets(width: number): number {
+  return Math.max(1, Math.round(width) - LEFT - RIGHT)
+}
 
 interface Props {
   /** Unique within the page; used for the clip path. */
@@ -15,6 +16,8 @@ interface Props {
   title: string
   legend?: ReactNode
   height: number
+  /** Drawing width in CSS pixels (see useWidth). */
+  width: number
   tEnd: number
   yDomain: readonly [number, number]
   yLabel: string
@@ -28,26 +31,34 @@ interface Props {
 }
 
 /** Scales of a chart; plot content uses the same ones as the frame. */
-export function chartScales(tEnd: number, yDomain: readonly [number, number], height: number): { x: Scale; y: Scale } {
+export function chartScales(
+  tEnd: number,
+  yDomain: readonly [number, number],
+  height: number,
+  width: number,
+): { x: Scale; y: Scale } {
   return {
-    x: linearScale([0, tEnd], [LEFT, CHART_W - RIGHT]),
+    x: linearScale([0, tEnd], [LEFT, width - RIGHT]),
     y: linearScale(yDomain, [height - BOTTOM, TOP]),
   }
 }
 
 /** A chart on the run's time axis with the GNSS outage shaded and the time cursor. */
 export function TimeChart(p: Props) {
-  const { x, y } = chartScales(p.tEnd, p.yDomain, p.height)
+  const W = p.width
+  const { x, y } = chartScales(p.tEnd, p.yDomain, p.height, W)
+  // About one time label per 80 px, so the labels never run into each other.
+  const timeTicks = Math.max(3, Math.min(10, Math.floor((W - LEFT - RIGHT) / 80)))
   return (
     <div className="chart">
       <div className="chart-head">
         <h2>{p.title}</h2>
         <div className="legend">{p.legend}</div>
       </div>
-      <svg viewBox={`0 0 ${CHART_W} ${p.height}`} role="img" aria-label={p.title}>
+      <svg width={W} height={p.height} viewBox={`0 0 ${W} ${p.height}`} role="img" aria-label={p.title}>
         <defs>
           <clipPath id={`clip-${p.id}`}>
-            <rect x={LEFT} y={TOP} width={CHART_W - LEFT - RIGHT} height={p.height - TOP - BOTTOM} />
+            <rect x={LEFT} y={TOP} width={W - LEFT - RIGHT} height={p.height - TOP - BOTTOM} />
           </clipPath>
         </defs>
         <rect
@@ -60,14 +71,14 @@ export function TimeChart(p: Props) {
         {/* Fewer ticks on short charts so the labels do not crowd. */}
         {ticks(p.yDomain, p.height < 100 ? 3 : 4).map((v) => (
           <g key={v}>
-            <line x1={LEFT} x2={CHART_W - RIGHT} y1={y(v)} y2={y(v)} stroke="var(--border)" strokeWidth={v === 0 ? 1.2 : 0.6} />
+            <line x1={LEFT} x2={W - RIGHT} y1={y(v)} y2={y(v)} stroke="var(--border)" strokeWidth={v === 0 ? 1.2 : 0.6} />
             <text x={LEFT - 4} y={y(v) + 3} textAnchor="end">
               {Number(v.toPrecision(4))}
             </text>
           </g>
         ))}
         {/* The last few percent are left for the axis label. */}
-        {ticks([0, p.tEnd], 10).filter((t) => t < p.tEnd * 0.96).map((t) => (
+        {ticks([0, p.tEnd], timeTicks).filter((t) => t < p.tEnd * 0.96).map((t) => (
           <text key={t} x={x(t)} y={p.height - 6} textAnchor="middle">
             {t}
           </text>
@@ -75,7 +86,7 @@ export function TimeChart(p: Props) {
         <text x={4} y={TOP + 8}>
           {p.yLabel}
         </text>
-        <text x={CHART_W - RIGHT} y={p.height - 6} textAnchor="end">
+        <text x={W - RIGHT} y={p.height - 6} textAnchor="end">
           t (s)
         </text>
         <line x1={x(p.exitTime)} x2={x(p.exitTime)} y1={TOP} y2={p.height - BOTTOM} stroke="var(--road)" strokeWidth={2.5} />

@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import type { SingleRunResult } from '../core/eval/single-run'
 import { decimate } from './lib/decimate'
 import { linePath } from './lib/scale'
-import { CHART_BUCKETS, chartScales, LegendItem, TimeChart } from './TimeChart'
+import { chartBuckets, chartScales, LegendItem, TimeChart } from './TimeChart'
 import { estimatorColor, GNSS_COLOR, TRUTH_COLOR } from './theme'
 
 interface ChartProps {
@@ -10,6 +10,8 @@ interface ChartProps {
   cursor: number
   /** GNSS outage [from, to], s. */
   outage: readonly [number, number]
+  /** Drawing width in CSS pixels. */
+  width: number
 }
 
 /** [min, max] over the given indices of one or more series, padded by 5 %. */
@@ -41,18 +43,19 @@ function movingMean(values: readonly number[], window: number): number[] {
   return out
 }
 
-export function AccelChart({ result, cursor, outage }: ChartProps) {
-  const H = 110
+export function AccelChart({ result, cursor, outage, width }: ChartProps) {
+  const H = 120
   const { truth } = result
   const plot = useMemo(() => {
     const f = result.accel.map((m) => m.f)
     const mean = movingMean(f, Math.round(truth.rateHz)) // 1 s
     const a = truth.samples.map((s) => s.a)
-    const fIdx = decimate(f, CHART_BUCKETS)
-    const meanIdx = decimate(mean, CHART_BUCKETS)
-    const aIdx = decimate(a, CHART_BUCKETS)
+    const buckets = chartBuckets(width)
+    const fIdx = decimate(f, buckets)
+    const meanIdx = decimate(mean, buckets)
+    const aIdx = decimate(a, buckets)
     const domain = extent([{ values: f, idx: fIdx }, { values: a, idx: aIdx }])
-    const { x, y } = chartScales(truth.runEnd, domain, H)
+    const { x, y } = chartScales(truth.runEnd, domain, H, width)
     const tx = (k: number) => x(k / truth.rateHz)
     return {
       domain,
@@ -64,7 +67,7 @@ export function AccelChart({ result, cursor, outage }: ChartProps) {
         </>
       ),
     }
-  }, [result, truth])
+  }, [result, truth, width])
   return (
     <TimeChart
       id="accel"
@@ -77,6 +80,7 @@ export function AccelChart({ result, cursor, outage }: ChartProps) {
         </>
       }
       height={H}
+      width={width}
       tEnd={truth.runEnd}
       yDomain={plot.domain}
       yLabel="m/s²"
@@ -89,14 +93,14 @@ export function AccelChart({ result, cursor, outage }: ChartProps) {
   )
 }
 
-export function GnssCharts({ result, cursor, outage }: ChartProps) {
-  const H = 90
+export function GnssCharts({ result, cursor, outage, width }: ChartProps) {
+  const H = 100
   const { truth, gnss } = result
   const speed = useMemo(() => {
     const v = truth.samples.map((s) => s.v * 3.6)
-    const vIdx = decimate(v, CHART_BUCKETS)
+    const vIdx = decimate(v, chartBuckets(width))
     const domain = extent([{ values: v, idx: vIdx }], [0, ...gnss.map((f) => f.speed * 3.6)])
-    const { x, y } = chartScales(truth.runEnd, domain, H)
+    const { x, y } = chartScales(truth.runEnd, domain, H, width)
     return {
       domain,
       node: (
@@ -108,12 +112,12 @@ export function GnssCharts({ result, cursor, outage }: ChartProps) {
         </>
       ),
     }
-  }, [truth, gnss])
+  }, [truth, gnss, width])
   const position = useMemo(() => {
     const reach = gnss.map((f) => Math.abs(f.positionError) + 2 * f.reportedSigma)
     const m = Math.max(5, ...reach)
     const domain: [number, number] = [-m * 1.05, m * 1.05]
-    const { x, y } = chartScales(truth.runEnd, domain, H)
+    const { x, y } = chartScales(truth.runEnd, domain, H, width)
     return {
       domain,
       node: (
@@ -134,7 +138,7 @@ export function GnssCharts({ result, cursor, outage }: ChartProps) {
         </>
       ),
     }
-  }, [truth, gnss])
+  }, [truth, gnss, width])
   return (
     <>
       <TimeChart
@@ -147,6 +151,7 @@ export function GnssCharts({ result, cursor, outage }: ChartProps) {
           </>
         }
         height={H}
+        width={width}
         tEnd={truth.runEnd}
         yDomain={speed.domain}
         yLabel="km/h"
@@ -160,6 +165,7 @@ export function GnssCharts({ result, cursor, outage }: ChartProps) {
         id="gnss-position"
         title="GNSS position error (fix − true) with reported ±2σ"
         height={H}
+        width={width}
         tEnd={truth.runEnd}
         yDomain={position.domain}
         yLabel="m"
@@ -173,22 +179,23 @@ export function GnssCharts({ result, cursor, outage }: ChartProps) {
   )
 }
 
-export function ErrorChart({ result, cursor, outage, shown, bandId }: ChartProps & { shown: ReadonlySet<string>; bandId: string }) {
-  const H = 150
+export function ErrorChart({ result, cursor, outage, width, shown, bandId }: ChartProps & { shown: ReadonlySet<string>; bandId: string }) {
+  const H = 170
   const { truth } = result
   const plot = useMemo(() => {
     const tracks = result.tracks.filter((tr) => shown.has(tr.id))
-    const series = tracks.map((tr) => ({ tr, idx: decimate(tr.errors, CHART_BUCKETS) }))
+    const buckets = chartBuckets(width)
+    const series = tracks.map((tr) => ({ tr, idx: decimate(tr.errors, buckets) }))
     const band = result.tracks.find((tr) => tr.id === bandId && shown.has(tr.id))
     const upper = band?.estimates.map((e) => (e ? 2 * e.sigmaS : null)) ?? []
     const lower = upper.map((v) => (v === null ? null : -v))
-    const upIdx = band ? decimate(upper, CHART_BUCKETS, 'max') : []
-    const loIdx = band ? decimate(lower, CHART_BUCKETS, 'min') : []
+    const upIdx = band ? decimate(upper, buckets, 'max') : []
+    const loIdx = band ? decimate(lower, buckets, 'min') : []
     const domain = extent(
       [...series.map(({ tr, idx }) => ({ values: tr.errors, idx })), { values: upper, idx: upIdx }, { values: lower, idx: loIdx }],
       [0],
     )
-    const { x, y } = chartScales(truth.runEnd, domain, H)
+    const { x, y } = chartScales(truth.runEnd, domain, H, width)
     const tx = (k: number) => x(k / truth.rateHz)
     const bandPath =
       upIdx.length > 0
@@ -204,7 +211,8 @@ export function ErrorChart({ result, cursor, outage, shown, bandId }: ChartProps
             <g key={ev.lead}>
               <line x1={tx(ev.kTrue)} x2={tx(ev.kTrue)} y1={0} y2={H} stroke="var(--text)" strokeDasharray="3 3" strokeOpacity={0.6} />
               <text x={tx(ev.kTrue) + 3} y={20 + i * 12}>
-                {ev.lead} m before exit
+                {/* Short form on narrow charts so the two labels do not run into each other. */}
+                {width < 600 ? `${ev.lead} m` : `${ev.lead} m before exit`}
               </text>
             </g>
           ))}
@@ -227,7 +235,7 @@ export function ErrorChart({ result, cursor, outage, shown, bandId }: ChartProps
         </>
       ),
     }
-  }, [result, truth, shown, bandId])
+  }, [result, truth, shown, bandId, width])
   return (
     <TimeChart
       id="error"
@@ -238,6 +246,7 @@ export function ErrorChart({ result, cursor, outage, shown, bandId }: ChartProps
           <LegendItem key={tr.id} color={estimatorColor(tr.id)} label={tr.id} />
         ))}
       height={H}
+      width={width}
       tEnd={truth.runEnd}
       yDomain={plot.domain}
       yLabel="m"

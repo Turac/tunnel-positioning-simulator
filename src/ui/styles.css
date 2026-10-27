@@ -21,10 +21,11 @@ body {
 
 .app {
   display: grid;
-  grid-template-columns: 270px 1fr;
+  grid-template-columns: 280px minmax(0, 1fr);
   min-height: 100vh;
 }
 
+/* On wide screens the controls stay in view while the run scrolls. */
 .controls {
   padding: 16px;
   background: var(--panel);
@@ -32,6 +33,11 @@ body {
   display: flex;
   flex-direction: column;
   gap: 14px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  box-sizing: border-box;
+  overflow-y: auto;
 }
 
 .controls h1 {
@@ -100,6 +106,8 @@ button:hover {
   flex-direction: column;
   gap: 12px;
   min-width: 0;
+  /* Very wide screens: keep charts at a readable aspect instead of stretching. */
+  max-width: 1600px;
 }
 
 .panel {
@@ -116,21 +124,35 @@ button:hover {
   font-weight: 600;
 }
 
+.panel {
+  min-width: 0;
+}
+
+/* SVGs are drawn at the measured pixel width (useWidth), so they are not scaled here. */
 .panel svg {
   display: block;
-  width: 100%;
-  height: auto;
   overflow: visible;
 }
 
 .time {
   display: flex;
-  gap: 10px;
+  flex-wrap: wrap;
+  gap: 8px 10px;
   align-items: center;
 }
 
+.time .play {
+  width: 70px;
+}
+
 .time input[type='range'] {
-  flex: 1;
+  flex: 1 1 200px;
+  min-width: 0;
+}
+
+.time .clock {
+  min-width: 9ch;
+  text-align: right;
 }
 
 .readout {
@@ -147,8 +169,13 @@ button:hover {
 }
 
 svg text {
-  font-size: 10px;
+  font-size: 11px;
   fill: var(--muted);
+}
+
+/* Wide tables scroll sideways inside their panel instead of widening the page. */
+.table-wrap {
+  overflow-x: auto;
 }
 
 table {
@@ -178,9 +205,10 @@ td:first-child {
 
 .chart-head {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: baseline;
-  gap: 12px;
+  gap: 2px 12px;
 }
 
 .chart-head h2 {
@@ -189,7 +217,8 @@ td:first-child {
 
 .legend {
   display: flex;
-  gap: 12px;
+  flex-wrap: wrap;
+  gap: 2px 12px;
   color: var(--muted);
   font-size: 12px;
 }
@@ -211,4 +240,65 @@ td:first-child {
 .hint {
   margin: 0;
   white-space: nowrap;
+}
+
+/* Keyboard hints are no use on touch screens. */
+@media (pointer: coarse) {
+  .hint {
+    display: none;
+  }
+}
+
+/* Narrow screens: controls above the run, laid out in as many columns as fit. */
+@media (max-width: 900px) {
+  .app {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .controls {
+    position: static;
+    height: auto;
+    overflow: visible;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px 20px;
+  }
+
+  .controls h1,
+  .controls > button {
+    grid-column: 1 / -1;
+  }
+
+  .controls > button {
+    justify-self: start;
+  }
+
+  .main {
+    padding: 10px;
+    gap: 10px;
+  }
+
+  .hint {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .controls {
+    padding: 12px;
+  }
+
+  .main {
+    padding: 8px;
+  }
+
+  .panel {
+    padding: 8px;
+  }
+
+  .time .clock {
+    flex: 1;
+  }
 }

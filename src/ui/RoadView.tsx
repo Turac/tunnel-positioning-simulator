@@ -1,4 +1,5 @@
 import type { SingleRunResult } from '../core/eval/single-run'
+import { Card } from './Card'
 import { linearScale, ticks, type Scale } from './lib/scale'
 import { estimatorColor, GNSS_COLOR, TRUTH_COLOR } from './theme'
 import { useWidth } from './useWidth'
@@ -48,91 +49,96 @@ export function RoadView({ result, k, shown, bandId }: Props) {
     )
 
   return (
-    <div className="panel" ref={ref}>
-      <h2>Road: whole route</h2>
-      <svg width={W} height={74} viewBox={`0 0 ${W} 74`} role="img" aria-label="Whole road with the tunnel">
-        <Features x={overview} result={result} y0={22} y1={48} labels compact={compact} />
-        {announced(overview, 56)}
-        {tracks.map((tr) => {
-          const e = tr.estimates[k]
-          return e ? <Marker key={tr.id} x={overview(e.s)} y={35} color={estimatorColor(tr.id)} width={W} /> : null
-        })}
-        <rect x={overview(truth.s) - 3} y={27} width={6} height={16} fill={TRUTH_COLOR} />
-      </svg>
-      <Legend />
-
-      <h2 style={{ marginTop: 8 }}>Road: {2 * ZOOM_HALF} m around the true car</h2>
-      <svg width={W} height={zoomH} viewBox={`0 0 ${W} ${zoomH}`} role="img" aria-label="Zoomed road around the car">
-        <defs>
-          <clipPath id="zoom-clip">
-            <rect x={PAD} y={0} width={W - 2 * PAD} height={zoomH} />
-          </clipPath>
-        </defs>
-        <g clipPath="url(#zoom-clip)">
-          <Features x={zoom} result={result} y0={8} y1={zoomH - 18} labels compact={compact} />
-          <rect x={zoom(truth.s) - 3} y={12} width={6} height={rowsBottom - 12} fill={TRUTH_COLOR} />
-          {announced(zoom, rowsBottom + 4)}
-          {recentFixes.map((f) => (
-            <circle key={f.t} cx={zoom(f.s)} cy={20} r={3} fill={GNSS_COLOR}>
-              <title>{`GNSS fix t = ${f.t} s`}</title>
-            </circle>
-          ))}
-          {tracks.map((tr, i) => {
+    <>
+      <Card tone="road" title="Road: whole route" subtitle="Approach, tunnel (shaded) and departure, with the exit branch. Symbols as in the close-up below." bodyRef={ref}>
+        <svg width={W} height={74} viewBox={`0 0 ${W} 74`} role="img" aria-label="Whole road with the tunnel">
+          <Features x={overview} result={result} y0={22} y1={48} labels compact={compact} />
+          {announced(overview, 56)}
+          {tracks.map((tr) => {
             const e = tr.estimates[k]
-            if (!e) return null
-            const y = 40 + i * 16
-            const color = estimatorColor(tr.id)
+            return e ? <Marker key={tr.id} x={overview(e.s)} y={35} color={estimatorColor(tr.id)} width={W} /> : null
+          })}
+          <rect x={overview(truth.s) - 3} y={27} width={6} height={16} fill={TRUTH_COLOR} />
+        </svg>
+      </Card>
+
+      <Card
+        tone="road"
+        title={`Road: ${2 * ZOOM_HALF} m around the true car`}
+        subtitle="One row per method; the shaded bar is the ±2σ band of the selected method."
+        aside={<RoadLegend />}
+      >
+        <svg width={W} height={zoomH} viewBox={`0 0 ${W} ${zoomH}`} role="img" aria-label="Zoomed road around the car">
+          <defs>
+            <clipPath id="zoom-clip">
+              <rect x={PAD} y={0} width={W - 2 * PAD} height={zoomH} />
+            </clipPath>
+          </defs>
+          <g clipPath="url(#zoom-clip)">
+            <Features x={zoom} result={result} y0={8} y1={zoomH - 18} labels compact={compact} />
+            <rect x={zoom(truth.s) - 3} y={12} width={6} height={rowsBottom - 12} fill={TRUTH_COLOR} />
+            {announced(zoom, rowsBottom + 4)}
+            {recentFixes.map((f) => (
+              <circle key={f.t} cx={zoom(f.s)} cy={20} r={3} fill={GNSS_COLOR}>
+                <title>{`GNSS fix t = ${f.t} s`}</title>
+              </circle>
+            ))}
+            {tracks.map((tr, i) => {
+              const e = tr.estimates[k]
+              if (!e) return null
+              const y = 40 + i * 16
+              const color = estimatorColor(tr.id)
+              return (
+                <g key={tr.id}>
+                  {tr.id === bandId && (
+                    <rect
+                      x={zoom(e.s - 2 * e.sigmaS)}
+                      y={y - 6}
+                      width={Math.max(1, zoom(e.s + 2 * e.sigmaS) - zoom(e.s - 2 * e.sigmaS))}
+                      height={12}
+                      fill={color}
+                      opacity={0.2}
+                    />
+                  )}
+                  <Marker x={zoom(e.s)} y={y} color={color} width={W} />
+                </g>
+              )
+            })}
+          </g>
+          {/* About one distance label per 90 px. */}
+          {ticks(zoom.domain, Math.max(3, Math.min(8, Math.floor(W / 90)))).map((s) => (
+            <text key={s} x={zoom(s)} y={zoomH - 4} textAnchor="middle">
+              {Math.round(s)}
+            </text>
+          ))}
+          <text x={PAD + 4} y={22}>GNSS</text>
+          {tracks.map((tr, i) => (
+            <text key={tr.id} x={PAD + 4} y={44 + i * 16}>
+              {tr.id}
+            </text>
+          ))}
+        </svg>
+
+        <div className="readout">
+          <span>t = {truth.t.toFixed(1)} s</span>
+          <span>true s = {truth.s.toFixed(1)} m</span>
+          <span>v = {(truth.v * 3.6).toFixed(1)} km/h</span>
+          <span>error = estimate − true</span>
+          {tracks.map((tr) => {
+            const err = tr.errors[k]
+            const e = tr.estimates[k]
             return (
-              <g key={tr.id}>
-                {tr.id === bandId && (
-                  <rect
-                    x={zoom(e.s - 2 * e.sigmaS)}
-                    y={y - 6}
-                    width={Math.max(1, zoom(e.s + 2 * e.sigmaS) - zoom(e.s - 2 * e.sigmaS))}
-                    height={12}
-                    fill={color}
-                    opacity={0.2}
-                  />
-                )}
-                <Marker x={zoom(e.s)} y={y} color={color} width={W} />
-              </g>
+              <span key={tr.id} style={{ color: estimatorColor(tr.id) }}>
+                {tr.id}:{' '}
+                {err === null || err === undefined || !e
+                  ? '—'
+                  : `${err >= 0 ? '+' : ''}${err.toFixed(1)} m (±${round2Sigma(2 * e.sigmaS)} m)`}
+              </span>
             )
           })}
-        </g>
-        {/* About one distance label per 90 px. */}
-        {ticks(zoom.domain, Math.max(3, Math.min(8, Math.floor(W / 90)))).map((s) => (
-          <text key={s} x={zoom(s)} y={zoomH - 4} textAnchor="middle">
-            {Math.round(s)}
-          </text>
-        ))}
-        <text x={PAD + 4} y={22}>GNSS</text>
-        {tracks.map((tr, i) => (
-          <text key={tr.id} x={PAD + 4} y={44 + i * 16}>
-            {tr.id}
-          </text>
-        ))}
-      </svg>
-      <Legend />
-
-      <div className="readout">
-        <span>t = {truth.t.toFixed(1)} s</span>
-        <span>true s = {truth.s.toFixed(1)} m</span>
-        <span>v = {(truth.v * 3.6).toFixed(1)} km/h</span>
-        <span>error = estimate − true</span>
-        {tracks.map((tr) => {
-          const err = tr.errors[k]
-          const e = tr.estimates[k]
-          return (
-            <span key={tr.id} style={{ color: estimatorColor(tr.id) }}>
-              {tr.id}:{' '}
-              {err === null || err === undefined || !e
-                ? '—'
-                : `${err >= 0 ? '+' : ''}${err.toFixed(1)} m (±${round2Sigma(2 * e.sigmaS)} m)`}
-            </span>
-          )
-        })}
-      </div>
-    </div>
+        </div>
+      </Card>
+    </>
   )
 }
 
@@ -189,8 +195,14 @@ function Marker({ x, y, color, width }: { x: number; y: number; color: string; w
   )
 }
 
-function Legend() {
-  return <p className="note">▮ true car · ○ estimate · ▲ true position when each method announced</p>
+function RoadLegend() {
+  return (
+    <>
+      <span className="legend-item">▮ true car</span>
+      <span className="legend-item">○ estimate</span>
+      <span className="legend-item">▲ true position when each method announced</span>
+    </>
+  )
 }
 
 /** 2σ for the readout: whole metres from 10 m, one decimal below. */

@@ -1,5 +1,6 @@
 import { COLUMNS } from '../core/eval/monte-carlo'
 import type { SingleRunResult } from '../core/eval/single-run'
+import { Card } from './Card'
 import { estimatorColor } from './theme'
 
 interface Props {
@@ -11,8 +12,7 @@ interface Props {
 export function MetricsPanel({ result, shown }: Props) {
   const tracks = result.tracks.filter((tr) => shown.has(tr.id))
   return (
-    <div className="panel">
-      <h2>Metrics for this run</h2>
+    <Card tone="result" title="Metrics for this run" subtitle="Same columns as the Monte Carlo report, for this one seed.">
       <div className="table-wrap">
         <table>
           <thead>
@@ -38,7 +38,7 @@ export function MetricsPanel({ result, shown }: Props) {
         </table>
       </div>
       <p className="note">Announcement errors: negative = early, positive = late.</p>
-    </div>
+    </Card>
   )
 }
 
@@ -47,8 +47,11 @@ export function AnnouncementTable({ result, shown }: Props) {
   const samples = result.truth.samples
   const tracks = result.tracks.filter((tr) => shown.has(tr.id))
   return (
-    <div className="panel">
-      <h2>Exit announcements (exit at {result.map.exitS} m)</h2>
+    <Card
+      tone="result"
+      title={`Exit announcements (exit at ${result.map.exitS} m)`}
+      subtitle="When each method said “400 m / 100 m to exit”, and where the car really was."
+    >
       <div className="table-wrap">
         <table>
           <thead>
@@ -77,6 +80,6 @@ export function AnnouncementTable({ result, shown }: Props) {
           </tbody>
         </table>
       </div>
-    </div>
+    </Card>
   )
 }

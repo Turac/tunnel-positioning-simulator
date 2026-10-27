@@ -13,7 +13,9 @@ export function chartBuckets(width: number): number {
 interface Props {
   /** Unique within the page; used for the clip path. */
   id: string
+  /** Accessible name; also drawn as a small sub-heading unless the card title already says it. */
   title: string
+  hideTitle?: boolean
   legend?: ReactNode
   height: number
   /** Drawing width in CSS pixels (see useWidth). */
@@ -51,10 +53,12 @@ export function TimeChart(p: Props) {
   const timeTicks = Math.max(3, Math.min(10, Math.floor((W - LEFT - RIGHT) / 80)))
   return (
     <div className="chart">
-      <div className="chart-head">
-        <h2>{p.title}</h2>
-        <div className="legend">{p.legend}</div>
-      </div>
+      {(!p.hideTitle || p.legend) && (
+        <div className="chart-head">
+          {!p.hideTitle && <h3>{p.title}</h3>}
+          {p.legend && <div className="legend">{p.legend}</div>}
+        </div>
+      )}
       <svg width={W} height={p.height} viewBox={`0 0 ${W} ${p.height}`} role="img" aria-label={p.title}>
         <defs>
           <clipPath id={`clip-${p.id}`}>

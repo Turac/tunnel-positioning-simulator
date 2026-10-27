@@ -9,7 +9,6 @@ import { AccelChart, ErrorChart, GnssCharts } from './Charts'
 import { AnnouncementTable, MetricsPanel } from './MetricsPanel'
 import { RoadView } from './RoadView'
 import { usePlayback } from './usePlayback'
-import { useWidth } from './useWidth'
 
 const ESTIMATOR_IDS = ESTIMATORS.map((e) => e.id)
 
@@ -87,47 +86,50 @@ function RunView(p: {
   const t = Math.min(Math.max(p.time, 0), truth.runEnd)
   const k = Math.min(truth.samples.length - 1, Math.round(t * truth.rateHz))
   const playback = usePlayback(t, p.onTime, truth.runEnd)
-  const [chartsRef, chartW] = useWidth<HTMLDivElement>()
   // GNSS is out from the entry until the first fix after the exit.
   const outage: [number, number] = [truth.entryTime, p.result.reacquisitionTime ?? truth.runEnd]
   return (
     <>
       <div className="panel time">
-        <button className="play" onClick={playback.toggle} aria-label={playback.playing ? 'Pause' : 'Play'}>
-          {playback.playing ? 'Pause' : 'Play'}
-        </button>
-        <select aria-label="Playback speed" value={playback.speed} onChange={(e) => playback.setSpeed(Number(e.target.value))}>
-          {[1, 10, 30].map((s) => (
-            <option key={s} value={s}>
-              ×{s}
-            </option>
-          ))}
-        </select>
-        <input
-          type="range"
-          aria-label="Time"
-          min={0}
-          max={truth.runEnd}
-          step={0.1}
-          value={t}
-          onChange={(e) => p.onTime(Number(e.target.value))}
-        />
-        <span className="value clock">
-          {t.toFixed(1)} / {truth.runEnd.toFixed(0)} s
-        </span>
-        <span className="hint">Space: play · ←/→: 1 s</span>
+        <div className="time-row">
+          <button className="play" onClick={playback.toggle} aria-label={playback.playing ? 'Pause' : 'Play'}>
+            {playback.playing ? 'Pause' : 'Play'}
+          </button>
+          <select aria-label="Playback speed" value={playback.speed} onChange={(e) => playback.setSpeed(Number(e.target.value))}>
+            {[1, 10, 30].map((s) => (
+              <option key={s} value={s}>
+                ×{s}
+              </option>
+            ))}
+          </select>
+          <input
+            type="range"
+            aria-label="Time"
+            min={0}
+            max={truth.runEnd}
+            step={0.1}
+            value={t}
+            onChange={(e) => p.onTime(Number(e.target.value))}
+          />
+          <span className="value clock">
+            {t.toFixed(1)} / {truth.runEnd.toFixed(0)} s
+          </span>
+          <span className="hint">Space: play · ←/→: 1 s</span>
+        </div>
       </div>
+      <p className="note page-note">
+        In every chart: shaded = GNSS outage (tunnel entry to the first fix after the exit) · thick grey line = tunnel
+        exit · thin black line = current time.
+      </p>
       <RoadView result={p.result} k={k} shown={p.shown} bandId={p.bandId} />
-      <div className="panel charts" ref={chartsRef}>
-        <ErrorChart result={p.result} cursor={t} outage={outage} width={chartW} shown={p.shown} bandId={p.bandId} />
-        <AccelChart result={p.result} cursor={t} outage={outage} width={chartW} />
-        <GnssCharts result={p.result} cursor={t} outage={outage} width={chartW} />
-        <p className="note">
-          Shaded: GNSS outage, from the tunnel entry to the first fix after the exit. Thick grey line: tunnel exit.
-        </p>
-      </div>
+      <ErrorChart result={p.result} cursor={t} outage={outage} shown={p.shown} bandId={p.bandId} />
       <MetricsPanel result={p.result} shown={p.shown} />
       <AnnouncementTable result={p.result} shown={p.shown} />
+      <details className="sensors" open>
+        <summary>Sensor inputs</summary>
+        <AccelChart result={p.result} cursor={t} outage={outage} />
+        <GnssCharts result={p.result} cursor={t} outage={outage} />
+      </details>
     </>
   )
 }

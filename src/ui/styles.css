@@ -8,6 +8,13 @@
   --road: #9a9a9a;
   --outage: rgba(0, 0, 0, 0.06);
   --error: #b00020;
+  /* Card groups: subtle edge and header tints, kept away from the estimator colours. */
+  --edge-road: #b9c6d3;
+  --tint-road: #f3f6f9;
+  --edge-result: #c9c3dc;
+  --tint-result: #f6f5fa;
+  --edge-sensor: #bcd5c6;
+  --tint-sensor: #f3f8f5;
   font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
   font-size: 14px;
   color: var(--text);
@@ -41,8 +48,24 @@ body {
 }
 
 .controls h1 {
-  font-size: 16px;
+  font-size: 17px;
   margin: 0;
+}
+
+.brand p {
+  margin: 2px 0 0;
+  font-size: 12px;
+}
+
+.controls h3.section {
+  margin: 6px 0 -6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
 }
 
 .control label,
@@ -79,12 +102,21 @@ body {
   align-items: center;
 }
 
+/* One row per estimator: checkbox, colour, ID and plain name, left-aligned. */
+.control label.estimator {
+  justify-content: flex-start;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-weight: 400;
+}
+
 .swatch {
   display: inline-block;
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  margin-right: 4px;
+  flex: none;
 }
 
 button {
@@ -104,7 +136,7 @@ button:hover {
   padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
   min-width: 0;
   /* Very wide screens: keep charts at a readable aspect instead of stretching. */
   max-width: 1600px;
@@ -113,32 +145,122 @@ button:hover {
 .panel {
   background: var(--panel);
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: 8px;
   padding: 10px 12px;
-}
-
-.panel h2 {
-  font-size: 13px;
-  margin: 0 0 6px;
-  color: var(--muted);
-  font-weight: 600;
-}
-
-.panel {
   min-width: 0;
 }
 
-/* SVGs are drawn at the measured pixel width (useWidth), so they are not scaled here. */
-.panel svg {
-  display: block;
-  overflow: visible;
+/* The playback bar stays at the top while the cards scroll under it. */
+.time {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
 }
 
-.time {
+.time-row {
   display: flex;
   flex-wrap: wrap;
   gap: 8px 10px;
   align-items: center;
+}
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--edge);
+  border-radius: 8px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.card-road {
+  --edge: var(--edge-road);
+  --tint: var(--tint-road);
+}
+
+.card-result {
+  --edge: var(--edge-result);
+  --tint: var(--tint-result);
+}
+
+.card-sensor {
+  --edge: var(--edge-sensor);
+  --tint: var(--tint-sensor);
+}
+
+.card-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 4px 16px;
+  padding: 8px 14px;
+  background: var(--tint);
+  border-bottom: 1px solid var(--border);
+}
+
+.card-head h2 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 650;
+  color: var(--text);
+}
+
+.card-head .legend {
+  padding-top: 2px;
+}
+
+.card-subtitle {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.card-body {
+  padding: 10px 14px 12px;
+}
+
+/* SVGs are drawn at the measured pixel width (useWidth), so they are not scaled here. */
+.card svg {
+  display: block;
+  overflow: visible;
+}
+
+.chart + .chart {
+  margin-top: 10px;
+}
+
+.chart-head h3 {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+/* Sits right under the playback bar; the main gap would push it too far away. */
+.page-note {
+  margin: -8px 2px 0;
+}
+
+.sensors {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.sensors summary {
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 4px 0;
+}
+
+.sensors[open] summary {
+  margin-bottom: 14px;
 }
 
 .time .play {
@@ -156,6 +278,7 @@ button:hover {
 }
 
 .readout {
+  margin-top: 8px;
   font-variant-numeric: tabular-nums;
   color: var(--muted);
   display: flex;
@@ -197,22 +320,12 @@ td:first-child {
   text-align: left;
 }
 
-.charts {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
 .chart-head {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
   align-items: baseline;
   gap: 2px 12px;
-}
-
-.chart-head h2 {
-  margin: 0;
 }
 
 .legend {
@@ -266,7 +379,8 @@ td:first-child {
     gap: 12px 20px;
   }
 
-  .controls h1,
+  .controls .brand,
+  .controls h3.section,
   .controls > button {
     grid-column: 1 / -1;
   }
@@ -296,6 +410,12 @@ td:first-child {
 
   .panel {
     padding: 8px;
+  }
+
+  .card-head,
+  .card-body {
+    padding-left: 10px;
+    padding-right: 10px;
   }
 
   .time .clock {

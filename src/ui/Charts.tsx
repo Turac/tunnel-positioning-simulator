@@ -1,17 +1,17 @@
 import { useMemo } from 'react'
 import type { SingleRunResult } from '../core/eval/single-run'
+import { Card } from './Card'
 import { decimate } from './lib/decimate'
 import { linePath } from './lib/scale'
 import { chartBuckets, chartScales, LegendItem, TimeChart } from './TimeChart'
-import { estimatorColor, GNSS_COLOR, TRUTH_COLOR } from './theme'
+import { estimatorColor, estimatorName, GNSS_COLOR, TRUTH_COLOR } from './theme'
+import { useWidth } from './useWidth'
 
 interface ChartProps {
   result: SingleRunResult
   cursor: number
   /** GNSS outage [from, to], s. */
   outage: readonly [number, number]
-  /** Drawing width in CSS pixels. */
-  width: number
 }
 
 /** [min, max] over the given indices of one or more series, padded by 5 %. */
@@ -43,7 +43,8 @@ function movingMean(values: readonly number[], window: number): number[] {
   return out
 }
 
-export function AccelChart({ result, cursor, outage, width }: ChartProps) {
+export function AccelChart({ result, cursor, outage }: ChartProps) {
+  const [bodyRef, width] = useWidth<HTMLDivElement>()
   const H = 120
   const { truth } = result
   const plot = useMemo(() => {
@@ -69,31 +70,40 @@ export function AccelChart({ result, cursor, outage, width }: ChartProps) {
     }
   }, [result, truth, width])
   return (
-    <TimeChart
-      id="accel"
-      title="Accelerometer specific force"
-      legend={
+    <Card
+      tone="sensor"
+      title="Sensor input: accelerometer"
+      subtitle="Specific force measured along the car; noise, bias and grade leakage are what the estimators must cope with."
+      bodyRef={bodyRef}
+      aside={
         <>
           <LegendItem color="#c4c4c4" label="measured f" />
           <LegendItem color="#555" label="f, 1 s mean" />
           <LegendItem color={TRUTH_COLOR} label="true acceleration" dashed />
         </>
       }
-      height={H}
-      width={width}
-      tEnd={truth.runEnd}
-      yDomain={plot.domain}
-      yLabel="m/s²"
-      outage={outage}
-      exitTime={truth.exitTime}
-      cursor={cursor}
     >
-      {plot.node}
-    </TimeChart>
+      <TimeChart
+        id="accel"
+        title="Accelerometer specific force"
+        hideTitle
+        height={H}
+        width={width}
+        tEnd={truth.runEnd}
+        yDomain={plot.domain}
+        yLabel="m/s²"
+        outage={outage}
+        exitTime={truth.exitTime}
+        cursor={cursor}
+      >
+        {plot.node}
+      </TimeChart>
+    </Card>
   )
 }
 
-export function GnssCharts({ result, cursor, outage, width }: ChartProps) {
+export function GnssCharts({ result, cursor, outage }: ChartProps) {
+  const [bodyRef, width] = useWidth<HTMLDivElement>()
   const H = 100
   const { truth, gnss } = result
   const speed = useMemo(() => {
@@ -140,7 +150,12 @@ export function GnssCharts({ result, cursor, outage, width }: ChartProps) {
     }
   }, [truth, gnss, width])
   return (
-    <>
+    <Card
+      tone="sensor"
+      title="Sensor input: GNSS"
+      subtitle="Fixes stop at the tunnel entry and return with extra error after the exit."
+      bodyRef={bodyRef}
+    >
       <TimeChart
         id="gnss-speed"
         title="GNSS speed"
@@ -175,11 +190,12 @@ export function GnssCharts({ result, cursor, outage, width }: ChartProps) {
       >
         {position.node}
       </TimeChart>
-    </>
+    </Card>
   )
 }
 
-export function ErrorChart({ result, cursor, outage, width, shown, bandId }: ChartProps & { shown: ReadonlySet<string>; bandId: string }) {
+export function ErrorChart({ result, cursor, outage, shown, bandId }: ChartProps & { shown: ReadonlySet<string>; bandId: string }) {
+  const [bodyRef, width] = useWidth<HTMLDivElement>()
   const H = 170
   const { truth } = result
   const plot = useMemo(() => {
@@ -236,25 +252,34 @@ export function ErrorChart({ result, cursor, outage, width, shown, bandId }: Cha
       ),
     }
   }, [result, truth, shown, bandId, width])
+  const title = `Position error ŝ − s${shown.has(bandId) ? ` with ±2σ band of ${bandId}` : ''}`
   return (
-    <TimeChart
-      id="error"
-      title={`Position error ŝ − s${shown.has(bandId) ? ` with ±2σ band of ${bandId}` : ''}`}
-      legend={result.tracks
+    <Card
+      tone="result"
+      title="Position error (estimate − true)"
+      subtitle={`0 is perfect; above 0 the method thinks the car is further along.${shown.has(bandId) ? ` Band: ±2σ of ${bandId}.` : ''} ▼ marks when each method announced.`}
+      bodyRef={bodyRef}
+      aside={result.tracks
         .filter((tr) => shown.has(tr.id))
         .map((tr) => (
-          <LegendItem key={tr.id} color={estimatorColor(tr.id)} label={tr.id} />
+          <LegendItem key={tr.id} color={estimatorColor(tr.id)} label={`${tr.id} · ${estimatorName(tr.id)}`} />
         ))}
-      height={H}
-      width={width}
-      tEnd={truth.runEnd}
-      yDomain={plot.domain}
-      yLabel="m"
-      outage={outage}
-      exitTime={truth.exitTime}
-      cursor={cursor}
     >
-      {plot.node}
-    </TimeChart>
+      <TimeChart
+        id="error"
+        title={title}
+        hideTitle
+        height={H}
+        width={width}
+        tEnd={truth.runEnd}
+        yDomain={plot.domain}
+        yLabel="m"
+        outage={outage}
+        exitTime={truth.exitTime}
+        cursor={cursor}
+      >
+        {plot.node}
+      </TimeChart>
+    </Card>
   )
 }

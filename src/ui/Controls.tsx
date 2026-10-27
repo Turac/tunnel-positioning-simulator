@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import type { ScenarioOverrides } from '../core/scenarios/overrides'
 import type { Scenario } from '../core/scenarios/scenarios'
 import { MAX_TUNNEL_LENGTH, MIN_TUNNEL_LENGTH, MAX_SCENARIO_GRADE } from '../core/scenarios/validate'
-import { estimatorColor } from './theme'
+import { estimatorColor, estimatorName } from './theme'
 
 /** Bias slider range, m/s² (A-45). */
 const MAX_BIAS = 0.3
@@ -28,7 +28,12 @@ export function Controls(p: Props) {
 
   return (
     <aside className="controls">
-      <h1>Through the Tunnel</h1>
+      <div className="brand">
+        <h1>Through the Tunnel</h1>
+        <p className="value">Car position estimate while GNSS is lost in a tunnel</p>
+      </div>
+
+      <h3 className="section">Run</h3>
 
       <div className="control">
         <label htmlFor="scenario">Scenario</label>
@@ -44,8 +49,10 @@ export function Controls(p: Props) {
 
       <SeedControl seed={p.seed} onSeed={p.onSeed} />
 
+      <h3 className="section">Show</h3>
+
       <div className="control">
-        <div className="label">Estimators <span className="value">show · ±2σ band</span></div>
+        <div className="label">Estimators <span className="value">±2σ band</span></div>
         <div className="estimators">
           {p.estimatorIds.map((id) => (
             <EstimatorRow
@@ -59,6 +66,8 @@ export function Controls(p: Props) {
           ))}
         </div>
       </div>
+
+      <h3 className="section">What-if overrides</h3>
 
       <RangeControl
         label="Tunnel length"
@@ -99,10 +108,10 @@ export function Controls(p: Props) {
 function EstimatorRow(p: { id: string; shown: boolean; band: boolean; onToggle: () => void; onBand: () => void }) {
   return (
     <>
-      <label style={{ fontWeight: 400 }}>
+      <label className="estimator">
         <input type="checkbox" checked={p.shown} onChange={p.onToggle} />
         <span className="swatch" style={{ background: estimatorColor(p.id) }} />
-        {p.id}
+        {p.id} <span className="value">{estimatorName(p.id)}</span>
       </label>
       <span />
       <input type="radio" name="band" aria-label={`±2σ band of ${p.id}`} checked={p.band} onChange={p.onBand} />
